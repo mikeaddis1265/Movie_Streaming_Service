@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?   // Profile picture
+  password      String?   // Hashed password
+  username      String?   @unique
+  role          String    @default("user") // 'user' or 'admin'
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  watchlist     Watchlist[]
+  watchHistory  WatchHistory[]
+  ratings       Rating[]
+  reviews       Review[]
+  subscription  Subscription?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Movie {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  releaseDate  DateTime?
+  posterUrl    String?
+  trailerUrl   String?
+  genres       Genre[]
+  actors       Actor[]
+  directors    Director[]
+  ratings      Rating[]
+  reviews      Review[]
+  watchlists   Watchlist[]
+  watchHistory WatchHistory[]
+  views        Int      @default(0) // For popularity
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Genre {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  movies Movie[]
+}
+
+model Actor {
+  id     String  @id @default(cuid())
+  name   String
+  movies Movie[]
+}
+
+model Director {
+  id     String  @id @default(cuid())
+  name   String
+  movies Movie[]
+}
+
+model Rating {
+  id      String  @id @default(cuid())
+  userId  String
+  movieId String
+  score   Float
+  user    User    @relation(fields: [userId], references: [id])
+  movie   Movie   @relation(fields: [movieId], references: [id])
+}
+
+model Review {
+  id      String  @id @default(cuid())
+  userId  String
+  movieId String
+  content String
+  user    User    @relation(fields: [userId], references: [id])
+  movie   Movie   @relation(fields: [movieId], references: [id])
+}
+
+model Watchlist {
+  id      String  @id @default(cuid())
+  userId  String
+  movieId String
+  user    User    @relation(fields: [userId], references: [id])
+  movie   Movie   @relation(fields: [movieId], references: [id])
+}
+
+model WatchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  movieId     String
+  progress    Int      // Seconds watched
+  lastWatched DateTime
+  user        User     @relation(fields: [userId], references: [id])
+  movie       Movie    @relation(fields: [movieId], references: [id])
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  status     String   // e.g., "active", "inactive", "trial"
+  plan       String   // e.g., "monthly", "yearly"
+  startDate  DateTime
+  endDate    DateTime?
+  user       User     @relation(fields: [userId], references: [id])
+}
