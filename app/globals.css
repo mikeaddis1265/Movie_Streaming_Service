@@ -1,26 +1,481 @@
-@import "tailwindcss";
+/* app/globals.css - Your colleague's design */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Navigation Styles */
+.navigation {
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid #374151;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.navigation-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.navigation-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
 }
 
+.navigation-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.navigation-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navigation-link {
+  color: #d1d5db;
+  text-decoration: none;
+}
+
+.navigation-link:hover {
+  color: white;
+}
+
+.navigation-auth {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navigation-welcome {
+  color: #d1d5db;
+  font-size: 14px;
+}
+
+.navigation-logout {
+  background-color: #dc2626;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.navigation-logout:hover {
+  background-color: #b91c1c;
+}
+
+.navigation-login {
+  background-color: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.navigation-login:hover {
+  background-color: #1d4ed8;
+}
+
+/* Auth Styles */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.auth-form-container {
+  background-color: #374151;
+  padding: 32px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.auth-error {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: rgba(220, 38, 38, 0.2);
+  border: 1px solid #dc2626;
+  border-radius: 4px;
+  color: #fecaca;
+}
+
+.auth-success {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: rgba(34, 197, 94, 0.2);
+  border: 1px solid #22c55e;
+  border-radius: 4px;
+  color: #bbf7d0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-input {
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #374151;
+  color: white;
+  border: none;
+  outline: none;
+}
+
+.auth-input:focus {
+  background-color: #4b5563;
+}
+
+.auth-submit {
+  background-color: #2563eb;
+  cursor: pointer;
+}
+
+.auth-submit:hover {
+  background-color: #1d4ed8;
+}
+
+.auth-submit:disabled {
+  background-color: #6b7280;
+  cursor: not-allowed;
+}
+
+.auth-toggle-container {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.auth-toggle-button {
+  color: #60a5fa;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-toggle-button:hover {
+  color: #93c5fd;
+}
+
+.auth-toggle-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-social-container {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.auth-social-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.auth-social-google {
+  background-color: #dc2626;
+}
+
+.auth-social-google:hover {
+  background-color: #b91c1c;
+}
+
+.auth-social-facebook {
+  background-color: #1e40af;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-back-container {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.auth-back-button {
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.auth-back-button:hover {
+  color: white;
+}
+
+/* Browse Styles */
+.browse-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.browse-select {
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #374151;
+  color: white;
+  border: none;
+}
+
+.browse-select:focus {
+  outline: none;
+  background-color: #4b5563;
+}
+
+.browse-loading,
+.browse-error,
+.browse-no-results {
+  text-align: center;
+  padding: 50px 0;
+}
+
+.browse-error-title {
+  color: #ff6b6b;
+}
+
+.browse-error-message {
+  margin-top: 10px;
+  color: #888;
+}
+
+.browse-no-results-title {
+  color: #888;
+}
+
+.browse-movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.browse-movie-card {
+  background-color: #374151;
+  padding: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: white;
+  display: block;
+  transition: background-color 0.3s;
+}
+
+.browse-movie-card:hover {
+  background-color: #2563eb;
+}
+
+.browse-movie-poster {
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.browse-movie-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.browse-movie-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.browse-movie-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #d1d5db;
+}
+
+/* Homepage Styles */
+.homepage-error {
+  text-align: center;
+  padding: 50px 0;
+}
+
+.homepage-error-title {
+  color: #ff6b6b;
+  margin-bottom: 20px;
+}
+
+.homepage-error-message {
+  color: #888;
+  margin-bottom: 30px;
+}
+
+.homepage-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.homepage-view-all-link {
+  color: #4a9eff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.homepage-view-all-link:hover {
+  color: #60a5fa;
+}
+
+/* CSS Reset and Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Your colleague's exact styling */
+  font-family: Arial, sans-serif;
+  background-color: #141414;  /* Her exact dark background */
+  color: #ffffff;              /* Her exact white text */
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+#__next {
+  min-height: 100vh;
+}
+
+/* Ensure all text is white by default */
+h1, h2, h3, h4, h5, h6, p, div, span, a {
+  color: inherit;
+}
+
+/* Reset any default link styling */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Reset button styling */
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Reset form element styling */
+input, select, textarea {
+  font-family: inherit;
+}
+
+.container {
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    margin: 10px 0;
+}
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.button {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 5px !important;
+    padding: 10px 20px !important;
+    cursor: pointer !important;
+    font-family: Arial, sans-serif !important;
+}
+
+.video-player {
+    margin-top: 20px;
+}
+
+.movie-details {
+    min-height: 100vh;
+    background-color: #141414;
+    color: white;
+}
+
+.movie-backdrop {
+    background-size: cover;
+    background-position: center;
+    height: 400px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 40px;
+}
+
+.movie-details-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    padding: 40px 0;
+}
+
+@media (max-width: 768px) {
+    .movie-details-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .movie-backdrop {
+        padding: 20px;
+        height: 300px;
+    }
+    
+    .movie-backdrop h1 {
+        font-size: 32px !important;
+    }
+}
+
+/* Homepage sections spacing */
+.container > div {
+    margin-bottom: 40px;
+}
+
+.container > div:last-child {
+    margin-bottom: 20px;
+}
+
+/* Placeholder for missing movie images */
+.browse-movie-poster img[src="/placeholder-movie.jpg"] {
+    background-color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.browse-movie-poster img[src="/placeholder-movie.jpg"]:before {
+    content: "🎬";
+    font-size: 48px;
 }

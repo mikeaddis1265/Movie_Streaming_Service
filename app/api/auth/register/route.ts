@@ -32,6 +32,9 @@ export async function POST(req: Request) {
         email,
         password: hashed,
         name: name || null,
+        // TODO: Remove auto-verification for production
+        // Temporarily auto-verify for team development/testing
+        emailVerified: new Date(),
       },
     });
 
@@ -53,7 +56,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       data: { 
         id: user.id, 
-        message: "Registration successful. Please check your email to verify your account." 
+        message: "Registration successful! You can now login immediately." 
       } 
     });
   } catch (error) {
