@@ -230,14 +230,63 @@ export const discoverMovies = async (params: {
   return response.json();
 };
 
-export const searchMovies = async (query: string, page: number = 1): Promise<MovieListResponse> => {
-  const url = buildUrl('/search/movie', {
-    query: encodeURIComponent(query),
-    page: String(page)
-  });
+interface SearchOptions {
+  query: string;
+  page?: number;
+  include_adult?: boolean;
+}
+
+export const searchMovies = async (options: SearchOptions): Promise<MovieListResponse> => {
+  const params: Record<string, string> = {
+    query: encodeURIComponent(options.query),
+    page: String(options.page || 1)
+  };
+  
+  if (options.include_adult !== undefined) {
+    params.include_adult = String(options.include_adult);
+  }
+  
+  const url = buildUrl('/search/movie', params);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error searching movies: ${response.statusText}`);
   }
   return response.json();
 };
+
+export const searchTVShows = async (options: SearchOptions): Promise<MovieListResponse> => {
+  const params: Record<string, string> = {
+    query: encodeURIComponent(options.query),
+    page: String(options.page || 1)
+  };
+  
+  if (options.include_adult !== undefined) {
+    params.include_adult = String(options.include_adult);
+  }
+  
+  const url = buildUrl('/search/tv', params);
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) {
+    throw new Error(`Error searching TV shows: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const searchMulti = async (options: SearchOptions): Promise<MovieListResponse> => {
+  const params: Record<string, string> = {
+    query: encodeURIComponent(options.query),
+    page: String(options.page || 1)
+  };
+  
+  if (options.include_adult !== undefined) {
+    params.include_adult = String(options.include_adult);
+  }
+  
+  const url = buildUrl('/search/multi', params);
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) {
+    throw new Error(`Error searching multi: ${response.statusText}`);
+  }
+  return response.json();
+};
+

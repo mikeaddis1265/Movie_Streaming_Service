@@ -7,9 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/********************************
+/**
+ * ******************************
  * AUTHENTICATION MODELS (NextAuth.js)
- ********************************/
+ * ******************************
+ */
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -28,14 +30,6 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -44,22 +38,23 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/********************************
+/**
+ * ******************************
  * USER & APPLICATION MODELS
- ********************************/
+ * ******************************
+ */
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // Hashed password; can be null for OAuth users
+  password      String? // Hashed password; can be null for OAuth users
   username      String?   @unique
   role          Role      @default(USER)
 
   // Authentication connections (NextAuth)
-  accounts      Account[]
-  sessions      Session[]
+  accounts Account[]
 
   // Application-specific data
   watchlist      WatchlistItem[]
@@ -69,8 +64,8 @@ model User {
   subscription   Subscription?
   settings       UserSettings?
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -83,7 +78,7 @@ enum Role {
 model WatchlistItem {
   id        String    @id @default(cuid())
   userId    String
-  tmdbId    Int       // TMDb movie/TV show ID
+  tmdbId    Int // TMDb movie/TV show ID
   mediaType MediaType
   addedAt   DateTime  @default(now())
 
@@ -103,9 +98,9 @@ model ViewingHistory {
   userId    String
   tmdbId    Int
   mediaType MediaType
-  progress  Float?    // Progress in seconds or percentage
-  season    Int?      // For TV shows
-  episode   Int?      // For TV shows
+  progress  Float? // Progress in seconds or percentage
+  season    Int? // For TV shows
+  episode   Int? // For TV shows
   watchedAt DateTime  @default(now())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -121,7 +116,7 @@ model Rating {
   userId    String
   tmdbId    Int
   mediaType MediaType
-  value     Int       // 1-5 stars
+  value     Int // 1-5 stars
   createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -137,7 +132,7 @@ model Review {
   mediaType MediaType
   title     String?
   content   String
-  rating    Int?      // Optional rating with review
+  rating    Int? // Optional rating with review
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -175,7 +170,7 @@ model SubscriptionPlan {
   name      String
   price     Float
   currency  String   @default("USD")
-  interval  String   // month, year
+  interval  String // month, year
   features  String[] // List of features
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

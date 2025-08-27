@@ -1,21 +1,27 @@
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { AppError, ErrorCodes } from "@/lib/error-handler";
+import { createErrorResponse } from "@/lib/api-response";
+
+export type Role = 'USER' | 'ADMIN';
+
+export interface AuthenticatedUser {
+  id: string;
+  email: string;
+  name?: string;
+  role: string;
+}
 
 export interface AuthenticatedRequest extends Request {
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-    role?: string;
-  };
+  user: AuthenticatedUser;
 }
 
 export async function requireAuth(req: Request): Promise<AuthenticatedRequest> {
   const session = await getServerSession(authOptions);
   
-  if (!session?.user || !(session.user as any).id) {
+  if (!session?.user?.id) {
     throw new AppError(
       ErrorCodes.UNAUTHORIZED,
       "Authentication required",
@@ -26,18 +32,40 @@ export async function requireAuth(req: Request): Promise<AuthenticatedRequest> {
   return {
     ...req,
     user: {
-      id: (session.user as any).id,
-      email: session.user.email!,
+      id: session.user.id,
+      email: session.user.email || "",
       name: session.user.name || undefined,
-      role: (session.user as any).role || 'user',
+      role: session.user.role || 'USER',
     },
   } as AuthenticatedRequest;
+}
+
+/**
+ * Alternative auth check that returns Response instead of throwing
+ */
+export async function getAuthUser(request: NextRequest): Promise<AuthenticatedUser | Response> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    return createErrorResponse(
+      ErrorCodes.UNAUTHORIZED,
+      "Authentication required",
+      401
+    );
+  }
+
+  return {
+    id: session.user.id,
+    email: session.user.email || "",
+    name: session.user.name || undefined,
+    role: session.user.role || "USER"
+  };
 }
 
 export async function requireAdmin(req: Request): Promise<AuthenticatedRequest> {
   const authenticatedReq = await requireAuth(req);
   
-  if (authenticatedReq.user.role !== 'admin') {
+  if (authenticatedReq.user.role !== 'ADMIN') {
     throw new AppError(
       ErrorCodes.FORBIDDEN,
       "Admin access required",
@@ -46,6 +74,43 @@ export async function requireAdmin(req: Request): Promise<AuthenticatedRequest> 
   }
 
   return authenticatedReq;
+}
+
+/**
+ * Check if user has required role
+ */
+export async function requireRole(req: Request, requiredRole: Role): Promise<AuthenticatedRequest> {
+  const authenticatedReq = await requireAuth(req);
+  
+  if (authenticatedReq.user.role !== requiredRole) {
+    throw new AppError(
+      ErrorCodes.FORBIDDEN,
+      `${requiredRole} role required`,
+      403
+    );
+  }
+
+  return authenticatedReq;
+}
+
+/**
+ * Check if user has permission for resource
+ */
+export function hasPermission(
+  user: AuthenticatedUser, 
+  resourceUserId?: string
+): boolean {
+  // Admin can access everything
+  if (user.role === 'ADMIN') {
+    return true;
+  }
+  
+  // User can only access their own resources
+  if (resourceUserId) {
+    return user.id === resourceUserId;
+  }
+  
+  return false;
 }
 
 export function withAuth(

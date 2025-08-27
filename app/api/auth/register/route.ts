@@ -5,60 +5,72 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
 import { handleApiError, AppError, ErrorCodes } from "@/lib/error-handler";
+import { createSuccessResponse } from "@/lib/api-response";
 
-const RegisterSchema = z.object({
+const Schema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(1).max(100).optional(),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(1, "Name is required"),
 });
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { email, password, name } = RegisterSchema.parse(body);
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
+    const { email, password, name } = Schema.parse(await req.json());
+    
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (existingUser) {
       throw new AppError(
         ErrorCodes.EMAIL_ALREADY_EXISTS,
-        "This email is already registered",
+        "User with this email already exists",
         409
       );
     }
-
-    const hashed = await bcrypt.hash(password, 12);
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
+    // Create user (not verified initially)
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashed,
-        name: name || null,
-        // TODO: Remove auto-verification for production
-        // Temporarily auto-verify for team development/testing
-        emailVerified: new Date(),
+        name,
+        password: hashedPassword,
+        emailVerified: null, // User must verify email
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true
+      }
+    });
+    
+    // Generate verification token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token,
+        expires,
       },
     });
-
-    const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 60 * 60 * 1000);
-    await prisma.verificationToken.create({
-      data: { identifier: email, token, expires },
-    });
-
-    console.log('Attempting to send verification email to:', email);
-    try {
-      await sendVerificationEmail({ email, token });
-      console.log('Verification email sent successfully');
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      // Continue anyway - user is registered, they can request new verification
-    }
-
-    return NextResponse.json({ 
-      data: { 
-        id: user.id, 
-        message: "Registration successful! You can now login immediately." 
-      } 
-    });
+    
+    // Send verification email
+    await sendVerificationEmail({ email, token });
+    
+    return createSuccessResponse(
+      { user },
+      "Registration successful. Please check your email to verify your account.",
+      201
+    );
+    
   } catch (error) {
     return handleApiError(error);
   }
