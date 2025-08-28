@@ -44,3 +44,5 @@ next-env.d.ts
 /app/generated/prisma
 
 final doc to-do.pdf
+
+ngrok.exe

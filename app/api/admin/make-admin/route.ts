@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.update({
       where: { email },
-      data: { role: 'admin' },
+      data: { role: 'ADMIN' },
       select: {
         id: true,
         email: true,

@@ -63,6 +63,7 @@ model User {
   reviews        Review[]
   subscription   Subscription?
   settings       UserSettings?
+  favorites      Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -140,6 +141,19 @@ model Review {
 
   @@unique([userId, tmdbId, mediaType])
   @@map("reviews")
+}
+
+model Favorite {
+  id        String    @id @default(cuid())
+  userId    String
+  tmdbId    Int
+  mediaType MediaType
+  addedAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbId, mediaType])
+  @@map("favorites")
 }
 
 model Subscription {

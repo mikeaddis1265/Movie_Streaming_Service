@@ -18,7 +18,11 @@ interface MovieResult {
   original_language?: string;
   original_title?: string;
   popularity?: number;
-  production_companies?: Array<{ id: number; name: string; logo_path?: string }>;
+  production_companies?: Array<{
+    id: number;
+    name: string;
+    logo_path?: string;
+  }>;
   production_countries?: Array<{ iso_3166_1: string; name: string }>;
   spoken_languages?: Array<{ iso_639_1: string; name: string }>;
   video?: boolean;
@@ -49,8 +53,8 @@ const BASE_URL = "https://api.themoviedb.org/3";
 const getAuthHeaders = () => {
   if (ACCESS_TOKEN) {
     return {
-      'Authorization': `Bearer ${ACCESS_TOKEN}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
     };
   }
   return {};
@@ -58,24 +62,24 @@ const getAuthHeaders = () => {
 
 const buildUrl = (endpoint: string, params?: Record<string, string>) => {
   const url = new URL(`${BASE_URL}${endpoint}`);
-  
+
   // Add additional parameters
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.set(key, value);
     });
   }
-  
+
   // If we don't have access token, fall back to API key in query param
   if (!ACCESS_TOKEN && API_KEY) {
-    url.searchParams.set('api_key', API_KEY);
+    url.searchParams.set("api_key", API_KEY);
   }
-  
+
   return url.toString();
 };
 
 export const fetchMovies = async (): Promise<MovieListResponse> => {
-  const url = buildUrl('/movie/popular');
+  const url = buildUrl("/movie/popular");
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error fetching movies: ${response.statusText}`);
@@ -84,7 +88,7 @@ export const fetchMovies = async (): Promise<MovieListResponse> => {
 };
 
 export const fetchGenres = async (): Promise<GenreListResponse> => {
-  const url = buildUrl('/genre/movie/list');
+  const url = buildUrl("/genre/movie/list");
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error fetching genres: ${response.statusText}`);
@@ -97,20 +101,21 @@ export const fetchMovieDetails = async (
 ): Promise<MovieResult> => {
   try {
     // Test with access token first
-    const accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NjgxMDkxNzM1ODhiMjBlNTQzMjE0ZDI5MTFiOWQ1NiIsIm5iZiI6MTc1NTE4NzczMC40MzUwMDAyLCJzdWIiOiI2ODllMGExMmY2MWFkNDdlNDA1ZDI2OTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ofM7SqRs0cXV1VSTxlnPSADi42SNaJ1W9p8VqCzEVik";
-    
+    const accessToken =
+      "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NjgxMDkxNzM1ODhiMjBlNTQzMjE0ZDI5MTFiOWQ1NiIsIm5iZiI6MTc1NTE4NzczMC40MzUwMDAyLCJzdWIiOiI2ODllMGExMmY2MWFkNDdlNDA1ZDI2OTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ofM7SqRs0cXV1VSTxlnPSADi42SNaJ1W9p8VqCzEVik";
+
     const url = `${BASE_URL}/movie/${movieId}`;
     console.log(`Fetching movie details from: ${url}`);
     console.log(`Using hardcoded access token for testing`);
-    
+
     const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     };
     console.log(`Request headers:`, headers);
-    
+
     const response = await fetch(url, { headers });
-    
+
     if (!response.ok) {
       const errorData = await response.text();
       console.error(`TMDb API Error ${response.status}:`, errorData);
@@ -118,9 +123,12 @@ export const fetchMovieDetails = async (
         `Error fetching movie details for ${movieId}: ${response.status} ${response.statusText}`
       );
     }
-    
+
     const data = await response.json();
-    console.log(`Successfully fetched movie details for ${movieId}:`, data.title);
+    console.log(
+      `Successfully fetched movie details for ${movieId}:`,
+      data.title
+    );
     return data;
   } catch (error) {
     console.error(`Failed to fetch movie details for ${movieId}:`, error);
@@ -128,16 +136,29 @@ export const fetchMovieDetails = async (
   }
 };
 
-export const fetchNowPlayingMovies = async (): Promise<MovieListResponse> => {
-  const url = buildUrl('/movie/now_playing');
+export const fetchTVDetails = async (tvId: string): Promise<any> => {
+  const url = buildUrl(`/tv/${tvId}`);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
-    throw new Error(`Error fetching now playing movies: ${response.statusText}`);
+    throw new Error(`Error fetching TV details: ${response.statusText}`);
   }
   return response.json();
 };
 
-export const fetchTrendingMovies = async (timeWindow: 'day' | 'week' = 'day'): Promise<MovieListResponse> => {
+export const fetchNowPlayingMovies = async (): Promise<MovieListResponse> => {
+  const url = buildUrl("/movie/now_playing");
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) {
+    throw new Error(
+      `Error fetching now playing movies: ${response.statusText}`
+    );
+  }
+  return response.json();
+};
+
+export const fetchTrendingMovies = async (
+  timeWindow: "day" | "week" = "day"
+): Promise<MovieListResponse> => {
   const url = buildUrl(`/trending/movie/${timeWindow}`);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
@@ -176,23 +197,28 @@ interface MovieCredits {
   crew: CrewMember[];
 }
 
-export const fetchMovieCredits = async (movieId: string): Promise<MovieCredits> => {
+export const fetchMovieCredits = async (
+  movieId: string
+): Promise<MovieCredits> => {
   try {
     // Test with hardcoded access token for now
-    const accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NjgxMDkxNzM1ODhiMjBlNTQzMjE0ZDI5MTFiOWQ1NiIsIm5iZiI6MTc1NTE4NzczMC40MzUwMDAyLCJzdWIiOiI2ODllMGExMmY2MWFkNDdlNDA1ZDI2OTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ofM7SqRs0cXV1VSTxlnPSADi42SNaJ1W9p8VqCzEVik";
-    
+    const accessToken =
+      "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NjgxMDkxNzM1ODhiMjBlNTQzMjE0ZDI5MTFiOWQ1NiIsIm5iZiI6MTc1NTE4NzczMC40MzUwMDAyLCJzdWIiOiI2ODllMGExMmY2MWFkNDdlNDA1ZDI2OTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ofM7SqRs0cXV1VSTxlnPSADi42SNaJ1W9p8VqCzEVik";
+
     const url = `${BASE_URL}/movie/${movieId}/credits`;
     const headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     };
-    
+
     const response = await fetch(url, { headers });
-    
+
     if (!response.ok) {
-      throw new Error(`Error fetching movie credits: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Error fetching movie credits: ${response.status} ${response.statusText}`
+      );
     }
-    
+
     return response.json();
   } catch (error) {
     console.error(`Failed to fetch movie credits for ${movieId}:`, error);
@@ -200,11 +226,15 @@ export const fetchMovieCredits = async (movieId: string): Promise<MovieCredits> 
   }
 };
 
-export const fetchMovieRecommendations = async (movieId: string): Promise<MovieListResponse> => {
+export const fetchMovieRecommendations = async (
+  movieId: string
+): Promise<MovieListResponse> => {
   const url = buildUrl(`/movie/${movieId}/recommendations`);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
-    throw new Error(`Error fetching movie recommendations: ${response.statusText}`);
+    throw new Error(
+      `Error fetching movie recommendations: ${response.statusText}`
+    );
   }
   return response.json();
 };
@@ -221,8 +251,8 @@ export const discoverMovies = async (params: {
       stringParams[key] = String(value);
     }
   });
-  
-  const url = buildUrl('/discover/movie', stringParams);
+
+  const url = buildUrl("/discover/movie", stringParams);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error discovering movies: ${response.statusText}`);
@@ -236,17 +266,19 @@ interface SearchOptions {
   include_adult?: boolean;
 }
 
-export const searchMovies = async (options: SearchOptions): Promise<MovieListResponse> => {
+export const searchMovies = async (
+  options: SearchOptions
+): Promise<MovieListResponse> => {
   const params: Record<string, string> = {
     query: encodeURIComponent(options.query),
-    page: String(options.page || 1)
+    page: String(options.page || 1),
   };
-  
+
   if (options.include_adult !== undefined) {
     params.include_adult = String(options.include_adult);
   }
-  
-  const url = buildUrl('/search/movie', params);
+
+  const url = buildUrl("/search/movie", params);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error searching movies: ${response.statusText}`);
@@ -254,17 +286,19 @@ export const searchMovies = async (options: SearchOptions): Promise<MovieListRes
   return response.json();
 };
 
-export const searchTVShows = async (options: SearchOptions): Promise<MovieListResponse> => {
+export const searchTVShows = async (
+  options: SearchOptions
+): Promise<MovieListResponse> => {
   const params: Record<string, string> = {
     query: encodeURIComponent(options.query),
-    page: String(options.page || 1)
+    page: String(options.page || 1),
   };
-  
+
   if (options.include_adult !== undefined) {
     params.include_adult = String(options.include_adult);
   }
-  
-  const url = buildUrl('/search/tv', params);
+
+  const url = buildUrl("/search/tv", params);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error searching TV shows: ${response.statusText}`);
@@ -272,21 +306,22 @@ export const searchTVShows = async (options: SearchOptions): Promise<MovieListRe
   return response.json();
 };
 
-export const searchMulti = async (options: SearchOptions): Promise<MovieListResponse> => {
+export const searchMulti = async (
+  options: SearchOptions
+): Promise<MovieListResponse> => {
   const params: Record<string, string> = {
     query: encodeURIComponent(options.query),
-    page: String(options.page || 1)
+    page: String(options.page || 1),
   };
-  
+
   if (options.include_adult !== undefined) {
     params.include_adult = String(options.include_adult);
   }
-  
-  const url = buildUrl('/search/multi', params);
+
+  const url = buildUrl("/search/multi", params);
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error searching multi: ${response.statusText}`);
   }
   return response.json();
 };
-

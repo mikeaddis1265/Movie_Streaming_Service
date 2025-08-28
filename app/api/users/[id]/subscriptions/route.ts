@@ -1,39 +1,41 @@
 // app/api/users/[id]/subscription/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { prisma } from '@/lib/prisma';
-import { authOptions } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // 1. Authentication and authorization check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!session || session.user.id !== id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 2. Get user's subscription from database
     const subscription = await prisma.subscription.findUnique({
-      where: { userId: params.id },
+      where: { userId: id },
+      include: { user: { select: { email: true, name: true } } },
     });
 
-    // 3. Check if subscription is active
+    // 3. Check if subscription is active (based on currentPeriodEnd)
     const currentDate = new Date();
     let isActive = false;
     let daysRemaining = 0;
 
-    if (subscription && subscription.status === 'ACTIVE') {
-      if (subscription.endDate && subscription.endDate > currentDate) {
+    if (subscription && subscription.status === "ACTIVE") {
+      if (
+        subscription.currentPeriodEnd &&
+        subscription.currentPeriodEnd > currentDate
+      ) {
         isActive = true;
         daysRemaining = Math.ceil(
-          (subscription.endDate.getTime() - currentDate.getTime()) / 
-          (1000 * 60 * 60 * 24)
+          (subscription.currentPeriodEnd.getTime() - currentDate.getTime()) /
+            (1000 * 60 * 60 * 24)
         );
       }
     }
@@ -42,21 +44,61 @@ export async function GET(
     return NextResponse.json({
       data: {
         hasSubscription: isActive,
-        subscription: subscription ? {
-          plan: subscription.plan,
-          status: subscription.status,
-          startDate: subscription.startDate,
-          endDate: subscription.endDate,
-          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-          daysRemaining: isActive ? daysRemaining : 0,
-        } : null,
-      }
+        subscription: subscription
+          ? {
+              planId: subscription.planId,
+              status: subscription.status,
+              currentPeriodStart: subscription.currentPeriodStart,
+              currentPeriodEnd: subscription.currentPeriodEnd,
+              cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+              daysRemaining: isActive ? daysRemaining : 0,
+            }
+          : null,
+      },
     });
-
   } catch (error) {
-    console.error('Get subscription error:', error);
+    console.error("Get subscription error:", error);
     return NextResponse.json(
-      { error: 'Failed to get subscription status' },
+      { error: "Failed to get subscription status" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST cancel at period end
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.id !== id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const body = await request.json();
+    const action = body?.action;
+    if (action === "cancel") {
+      await prisma.subscription.update({
+        where: { userId: id },
+        data: { cancelAtPeriodEnd: true },
+      });
+      return NextResponse.json({
+        message: "Subscription set to cancel at period end",
+      });
+    }
+    if (action === "resume") {
+      await prisma.subscription.update({
+        where: { userId: id },
+        data: { cancelAtPeriodEnd: false, status: "ACTIVE" },
+      });
+      return NextResponse.json({ message: "Subscription resumed" });
+    }
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error) {
+    console.error("Subscription action error:", error);
+    return NextResponse.json(
+      { error: "Failed to update subscription" },
       { status: 500 }
     );
   }

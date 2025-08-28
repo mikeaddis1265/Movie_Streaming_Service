@@ -127,3 +127,51 @@ export async function POST(
     );
   }
 }
+
+// DELETE - Clear a single item or all continue-watching entries
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.id !== params.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const clearAll = searchParams.get("all") === "true";
+    const tmdbIdParam = searchParams.get("tmdbId");
+    const mediaTypeParam = (searchParams.get("mediaType") || '').toUpperCase();
+
+    if (clearAll) {
+      await prisma.viewingHistory.deleteMany({ where: { userId: params.id } });
+      return NextResponse.json({ message: "Continue watching cleared" });
+    }
+
+    if (tmdbIdParam && (mediaTypeParam === 'MOVIE' || mediaTypeParam === 'TV')) {
+      const tmdbId = parseInt(tmdbIdParam, 10);
+      if (!Number.isFinite(tmdbId)) {
+        return NextResponse.json({ error: "Invalid tmdbId" }, { status: 400 });
+      }
+      await prisma.viewingHistory.delete({
+        where: {
+          userId_tmdbId_mediaType: {
+            userId: params.id,
+            tmdbId,
+            mediaType: mediaTypeParam as any,
+          }
+        }
+      });
+      return NextResponse.json({ message: "Entry removed" });
+    }
+
+    return NextResponse.json({ error: "Specify all=true or tmdbId & mediaType" }, { status: 400 });
+  } catch (error: any) {
+    console.error("Continue watching DELETE error:", error);
+    if (error.code === 'P2025') {
+      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
