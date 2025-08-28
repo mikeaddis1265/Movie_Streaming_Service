@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import "./auth.css";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
