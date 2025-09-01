@@ -1,6 +1,7 @@
 import FeaturedMovie from "@/app/components/movie/FeaturedMovie";
 import MovieCard from "@/app/components/movie/MovieCard";
-import { fetchMovies, fetchNowPlayingMovies, fetchTrendingMovies } from "@/lib/tmdbapi";
+import Footer from "@/app/components/ui/Footer";
+import { fetchMovies, fetchNowPlayingMovies, fetchTrendingMovies, fetchTopRatedMovies } from "@/lib/tmdbapi";
 import Link from "next/link";
 
 interface Movie {
@@ -16,18 +17,21 @@ export default async function HomePage() {
   let popularMovies: Movie[] = [];
   let nowPlayingMovies: Movie[] = [];
   let trendingMovies: Movie[] = [];
+  let topRatedMovies: Movie[] = [];
   let error: string | null = null;
 
   try {
-    const [popular, nowPlaying, trending] = await Promise.all([
+    const [popular, nowPlaying, trending, topRated] = await Promise.all([
       fetchMovies(),
       fetchNowPlayingMovies(),
-      fetchTrendingMovies()
+      fetchTrendingMovies(),
+      fetchTopRatedMovies()
     ]);
     
     popularMovies = popular.results;
     nowPlayingMovies = nowPlaying.results;
     trendingMovies = trending.results;
+    topRatedMovies = topRated.results;
   } catch (err) {
     console.error('Failed to fetch movies:', err);
     error = 'Failed to load movies. Please check your TMDb API configuration.';
@@ -50,64 +54,81 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="container">
-      {/* Featured Movie Section - Using colleague's layout */}
+    <div className="min-h-screen">
+      {/* Featured Movie Section */}
       {popularMovies.length > 0 && (
-        <div>
+        <div className="animate-fade-in-up">
           <FeaturedMovie movie={popularMovies[0]} />
         </div>
       )}
 
-      {/* Trending Now Section - Using her design */}
-      {trendingMovies.length > 0 && (
-        <div>
-          <div className="homepage-section-header">
-            <h2>Trending Now</h2>
-            <Link href="/browse" className="homepage-view-all-link">
-              View All →
-            </Link>
-          </div>
-          <div className="movie-grid">
-            {trendingMovies.slice(0, 10).map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="container max-w-7xl mx-auto px-6 py-8">
+        {/* Trending Now Section */}
+        {trendingMovies.length > 0 && (
+          <section className="mb-16 animate-fade-in-up">
+            <div className="mb-8">
+              <h2 className="text-4xl font-bold text-white">Trending Now</h2>
+            </div>
+            <div className="movie-grid">
+              {trendingMovies.slice(0, 10).map((movie, index) => (
+                <div key={movie.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* Now Playing Section */}
-      {nowPlayingMovies.length > 0 && (
-        <div>
-          <div className="homepage-section-header">
-            <h2>Now Playing</h2>
-            <Link href="/browse" className="homepage-view-all-link">
-              View All →
-            </Link>
-          </div>
-          <div className="movie-grid">
-            {nowPlayingMovies.slice(0, 10).map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
-            ))}
-          </div>
-        </div>
-      )}
+        {/* Now Playing Section */}
+        {nowPlayingMovies.length > 0 && (
+          <section className="mb-16 animate-fade-in-up">
+            <div className="mb-8">
+              <h2 className="text-4xl font-bold text-white">Now Playing</h2>
+            </div>
+            <div className="movie-grid">
+              {nowPlayingMovies.slice(0, 10).map((movie, index) => (
+                <div key={movie.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* Popular Movies Section */}
-      {popularMovies.length > 0 && (
-        <div>
-          <div className="homepage-section-header">
-            <h2>Popular Movies</h2>
-            <Link href="/browse" className="homepage-view-all-link">
-              View All →
-            </Link>
-          </div>
-          <div className="movie-grid">
-            {popularMovies.slice(1, 11).map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
-            ))}
-          </div>
-        </div>
-      )}
+        {/* Popular Movies Section */}
+        {popularMovies.length > 0 && (
+          <section className="mb-16 animate-fade-in-up">
+            <div className="mb-8">
+              <h2 className="text-4xl font-bold hover:translate-x-2 transition-transform duration-300 cursor-pointer" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>⭐ Popular Movies</h2>
+            </div>
+            <div className="movie-grid">
+              {popularMovies.slice(1, 11).map((movie, index) => (
+                <div key={movie.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Top IMDb Section */}
+        {topRatedMovies.length > 0 && (
+          <section className="mb-16 animate-fade-in-up">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold hover:translate-x-2 transition-transform duration-300 cursor-pointer" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>🏆 Top IMDb Movies</h2>
+            </div>
+            <div className="movie-grid">
+              {topRatedMovies.slice(0, 10).map((movie, index) => (
+                <div key={movie.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      <Footer />
     </div>
   );
 }
