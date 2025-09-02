@@ -6,7 +6,8 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Footer from '@/app/components/ui/Footer';
-import ModernVideoPlayer from "@/app/components/movie/ModernVideoPlayer";
+import ModernVideoPlayer from "@/app/components/movie/ModernVideoplayer";
+
 
 interface MovieDetails {
   id: number;
