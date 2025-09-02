@@ -3,27 +3,27 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-/**
- * ******************************
- * AUTHENTICATION MODELS (NextAuth.js)
- * ******************************
- */
+/// *
+///  * ******************************
+///  * AUTHENTICATION MODELS (NextAuth.js)
+///  * ******************************
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -38,61 +38,43 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/**
- * ******************************
- * USER & APPLICATION MODELS
- * ******************************
- */
+/// *
+///  * ******************************
+///  * USER & APPLICATION MODELS
+///  * ******************************
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  profilePicture String? // Custom profile picture upload
-  password      String? // Hashed password; can be null for OAuth users
-  username      String?   @unique
-  role          Role      @default(USER)
-
-  // Authentication connections (NextAuth)
-  accounts Account[]
-
-  // Application-specific data
-  watchlist      WatchlistItem[]
-  viewingHistory ViewingHistory[]
+  id             String           @id @default(cuid())
+  name           String?
+  email          String?          @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  username       String?          @unique
+  role           Role             @default(USER)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  accounts       Account[]
+  favorites      Favorite[]
   ratings        Rating[]
   reviews        Review[]
   subscription   Subscription?
   settings       UserSettings?
-  favorites      Favorite[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  viewingHistory ViewingHistory[]
+  watchlist      WatchlistItem[]
 
   @@map("users")
-}
-
-enum Role {
-  USER
-  ADMIN
 }
 
 model WatchlistItem {
   id        String    @id @default(cuid())
   userId    String
-  tmdbId    Int // TMDb movie/TV show ID
+  tmdbId    Int
   mediaType MediaType
   addedAt   DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tmdbId, mediaType])
   @@map("watchlist_items")
-}
-
-enum MediaType {
-  MOVIE
-  TV
 }
 
 model ViewingHistory {
@@ -100,14 +82,13 @@ model ViewingHistory {
   userId    String
   tmdbId    Int
   mediaType MediaType
-  progress  Float? // Progress in seconds or percentage
-  season    Int? // For TV shows
-  episode   Int? // For TV shows
+  progress  Float?
+  season    Int?
+  episode   Int?
   watchedAt DateTime  @default(now())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tmdbId, mediaType])
   @@map("viewing_history")
@@ -118,10 +99,9 @@ model Rating {
   userId    String
   tmdbId    Int
   mediaType MediaType
-  value     Int // 1-5 stars
+  value     Int
   createdAt DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tmdbId, mediaType])
   @@map("ratings")
@@ -134,11 +114,10 @@ model Review {
   mediaType MediaType
   title     String?
   content   String
-  rating    Int? // Optional rating with review
+  rating    Int?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tmdbId, mediaType])
   @@map("reviews")
@@ -150,8 +129,7 @@ model Favorite {
   tmdbId    Int
   mediaType MediaType
   addedAt   DateTime  @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tmdbId, mediaType])
   @@map("favorites")
@@ -167,17 +145,9 @@ model Subscription {
   cancelAtPeriodEnd  Boolean            @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELED
-  PAST_DUE
-  TRIALING
 }
 
 model SubscriptionPlan {
@@ -185,8 +155,8 @@ model SubscriptionPlan {
   name      String
   price     Float
   currency  String   @default("USD")
-  interval  String // month, year
-  features  String[] // List of features
+  interval  String
+  features  String[]
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
@@ -201,8 +171,24 @@ model UserSettings {
   autoplay  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MediaType {
+  MOVIE
+  TV
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
 }
