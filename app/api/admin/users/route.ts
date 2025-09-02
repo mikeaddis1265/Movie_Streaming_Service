@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 
 const PromoteUserSchema = z.object({
   userId: z.string().min(1),
-  role: z.enum(['user', 'admin']),
+  role: z.enum(['USER', 'ADMIN']),
 });
 
 // Promote/demote user role (super admin only)
@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
       const { userId, role } = PromoteUserSchema.parse(body);
 
       // Prevent self-demotion
-      if (userId === authenticatedReq.user.id && role === 'user') {
+      if (userId === authenticatedReq.user.id && role === 'USER') {
         throw new AppError(
           ErrorCodes.FORBIDDEN,
           "Cannot demote yourself from admin",
