@@ -36,6 +36,13 @@ interface MovieListResponse {
   total_results: number;
 }
 
+interface TVListResponse {
+  results: any[];
+  page: number;
+  total_pages: number;
+  total_results: number;
+}
+
 interface GenreResult {
   id: number;
   name: string;
@@ -243,7 +250,7 @@ export const discoverTV = async (params: {
   first_air_date_year?: string;
   with_original_language?: string;
   page?: number;
-}): Promise<MovieListResponse> => {
+}): Promise<TVListResponse> => {
   const stringParams: Record<string, string> = {};
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) {
@@ -287,7 +294,7 @@ export const searchMovies = async (
 
 export const searchTVShows = async (
   options: SearchOptions
-): Promise<MovieListResponse> => {
+): Promise<TVListResponse> => {
   const params: Record<string, string> = {
     query: encodeURIComponent(options.query),
     page: String(options.page || 1),
