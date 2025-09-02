@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [
     GoogleProvider({
@@ -58,10 +59,49 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          // Check if user exists in database
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! }
+          });
+
+          if (!existingUser) {
+            // Create user in database for Google OAuth
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                name: user.name || "",
+                image: user.image || null,
+                emailVerified: new Date(), // Google emails are pre-verified
+                role: "USER"
+              }
+            });
+            console.log('Created new Google OAuth user:', newUser.id);
+          } else {
+            console.log('Existing Google OAuth user found:', existingUser.id);
+          }
+        } catch (error) {
+          console.error('Error creating Google OAuth user:', error);
+          return false; // Deny sign in if we can't create user
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+      } else if (token.email) {
+        // Fetch user data from database to get role and id
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email }
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },

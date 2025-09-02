@@ -44,7 +44,7 @@ interface GenreListResponse {
 }
 
 const API_KEY = process.env.TMDB_API_KEY || "";
-const ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN || "";
+const ACCESS_TOKEN = process.env.TMDB_READ_ACCESS_TOKEN || "";
 const BASE_URL = "https://api.themoviedb.org/3";
 
 // TMDb supports two authentication methods:
@@ -80,9 +80,13 @@ const buildUrl = (endpoint: string, params?: Record<string, string>) => {
 
 export const fetchMovies = async (): Promise<MovieListResponse> => {
   const url = buildUrl("/movie/popular");
-  const response = await fetch(url, { headers: getAuthHeaders() });
+  const response = await fetch(url, { 
+    headers: getAuthHeaders(),
+    // Add timeout and error handling
+    signal: AbortSignal.timeout(10000) // 10 second timeout
+  });
   if (!response.ok) {
-    throw new Error(`Error fetching movies: ${response.statusText}`);
+    throw new Error(`Error fetching movies: ${response.status} ${response.statusText}`);
   }
   return response.json();
 };
@@ -99,41 +103,18 @@ export const fetchGenres = async (): Promise<GenreListResponse> => {
 export const fetchMovieDetails = async (
   movieId: string
 ): Promise<MovieResult> => {
-  try {
-    // Test with access token first
-    const accessToken =
-      "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NjgxMDkxNzM1ODhiMjBlNTQzMjE0ZDI5MTFiOWQ1NiIsIm5iZiI6MTc1NTE4NzczMC40MzUwMDAyLCJzdWIiOiI2ODllMGExMmY2MWFkNDdlNDA1ZDI2OTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ofM7SqRs0cXV1VSTxlnPSADi42SNaJ1W9p8VqCzEVik";
-
-    const url = `${BASE_URL}/movie/${movieId}`;
-    console.log(`Fetching movie details from: ${url}`);
-    console.log(`Using hardcoded access token for testing`);
-
-    const headers = {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    };
-    console.log(`Request headers:`, headers);
-
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`TMDb API Error ${response.status}:`, errorData);
-      throw new Error(
-        `Error fetching movie details for ${movieId}: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const data = await response.json();
-    console.log(
-      `Successfully fetched movie details for ${movieId}:`,
-      data.title
+  const url = buildUrl(`/movie/${movieId}`);
+  const response = await fetch(url, { 
+    headers: getAuthHeaders(),
+    signal: AbortSignal.timeout(10000) // 10 second timeout
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `Error fetching movie details for ${movieId}: ${response.status} ${response.statusText} ${text}`
     );
-    return data;
-  } catch (error) {
-    console.error(`Failed to fetch movie details for ${movieId}:`, error);
-    throw error;
   }
+  return response.json();
 };
 
 export const fetchTVDetails = async (tvId: string): Promise<any> => {
@@ -163,6 +144,15 @@ export const fetchTrendingMovies = async (
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error fetching trending movies: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const fetchTopRatedMovies = async (): Promise<MovieListResponse> => {
+  const url = buildUrl("/movie/top_rated");
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) {
+    throw new Error(`Error fetching top rated movies: ${response.statusText}`);
   }
   return response.json();
 };
@@ -200,30 +190,15 @@ interface MovieCredits {
 export const fetchMovieCredits = async (
   movieId: string
 ): Promise<MovieCredits> => {
-  try {
-    // Test with hardcoded access token for now
-    const accessToken =
-      "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5NjgxMDkxNzM1ODhiMjBlNTQzMjE0ZDI5MTFiOWQ1NiIsIm5iZiI6MTc1NTE4NzczMC40MzUwMDAyLCJzdWIiOiI2ODllMGExMmY2MWFkNDdlNDA1ZDI2OTkiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.ofM7SqRs0cXV1VSTxlnPSADi42SNaJ1W9p8VqCzEVik";
-
-    const url = `${BASE_URL}/movie/${movieId}/credits`;
-    const headers = {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    };
-
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      throw new Error(
-        `Error fetching movie credits: ${response.status} ${response.statusText}`
-      );
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error(`Failed to fetch movie credits for ${movieId}:`, error);
-    throw error;
+  const url = buildUrl(`/movie/${movieId}/credits`);
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `Error fetching movie credits for ${movieId}: ${response.status} ${response.statusText} ${text}`
+    );
   }
+  return response.json();
 };
 
 export const fetchMovieRecommendations = async (
@@ -243,6 +218,7 @@ export const discoverMovies = async (params: {
   with_genres?: string;
   primary_release_year?: string;
   with_original_language?: string;
+  with_origin_country?: string;
   page?: number;
 }): Promise<MovieListResponse> => {
   const stringParams: Record<string, string> = {};
@@ -256,6 +232,27 @@ export const discoverMovies = async (params: {
   const response = await fetch(url, { headers: getAuthHeaders() });
   if (!response.ok) {
     throw new Error(`Error discovering movies: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+export const discoverTV = async (params: {
+  with_genres?: string;
+  first_air_date_year?: string;
+  with_original_language?: string;
+  page?: number;
+}): Promise<MovieListResponse> => {
+  const stringParams: Record<string, string> = {};
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      stringParams[key] = String(value);
+    }
+  });
+
+  const url = buildUrl("/discover/tv", stringParams);
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) {
+    throw new Error(`Error discovering TV shows: ${response.statusText}`);
   }
   return response.json();
 };
