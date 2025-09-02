@@ -17,10 +17,12 @@ export async function GET(
     }
 
     // 2. Get user's subscription from database
+    console.log('Looking for subscription for user:', id);
     const subscription = await prisma.subscription.findUnique({
       where: { userId: id },
-      include: { user: { select: { email: true, name: true } } },
+      include: { user: { select: { email: true, name: true, profilePicture: true } } },
     });
+    console.log('Found subscription:', subscription);
 
     // 3. Check if subscription is active (based on currentPeriodEnd)
     const currentDate = new Date();
@@ -44,6 +46,7 @@ export async function GET(
     return NextResponse.json({
       data: {
         hasSubscription: isActive,
+        user: subscription?.user || null,
         subscription: subscription
           ? {
               planId: subscription.planId,
@@ -99,6 +102,44 @@ export async function POST(
     console.error("Subscription action error:", error);
     return NextResponse.json(
       { error: "Failed to update subscription" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE subscription completely
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.id !== id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Delete subscription completely
+    const deletedSubscription = await prisma.subscription.delete({
+      where: { userId: id },
+    });
+
+    return NextResponse.json({ 
+      message: "Subscription deleted successfully",
+      data: deletedSubscription 
+    });
+  } catch (error) {
+    console.error("Delete subscription error:", error);
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: "Subscription not found" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: "Failed to delete subscription" },
       { status: 500 }
     );
   }

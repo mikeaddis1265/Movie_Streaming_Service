@@ -25,6 +25,11 @@ export async function GET(
     let inWatchlist = false;
     let userRating = null;
     let watchProgress = null;
+    let hasActiveSubscription = false;
+    
+    // Determine if movie requires subscription (popular/recent movies require subscription)
+    const requiresSubscription = movieDetails.popularity > 50 || 
+                                 new Date(movieDetails.release_date) > new Date('2020-01-01');
 
     // 4. If user is logged in, fetch their personal data from OUR database
     if (userId) {
@@ -53,7 +58,7 @@ export async function GET(
       userRating = rating?.value || null;
 
       // Get watch progress
-      const history = await prisma.watchHistory.findUnique({
+      const history = await prisma.viewingHistory.findUnique({
         where: {
           userId_tmdbId_mediaType: {
             userId,
@@ -63,6 +68,17 @@ export async function GET(
         }
       });
       watchProgress = history?.progress || null;
+      
+      // Check user's subscription status
+      const subscription = await prisma.subscription.findUnique({
+        where: { userId },
+      });
+      
+      const currentDate = new Date();
+      hasActiveSubscription = !!(subscription && 
+                                subscription.status === "ACTIVE" && 
+                                subscription.currentPeriodEnd && 
+                                subscription.currentPeriodEnd > currentDate);
     }
 
     // 5. Fetch additional data from TMDb (in parallel for better performance)
@@ -82,7 +98,10 @@ export async function GET(
         inWatchlist,
         userRating,
         watchProgress,
-      }
+      },
+      requiresSubscription,
+      hasActiveSubscription,
+      canWatch: !requiresSubscription || hasActiveSubscription
     };
 
     return NextResponse.json({ data: responseData });

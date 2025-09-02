@@ -7,12 +7,13 @@ import { fetchMovieDetails, fetchTVDetails } from "@/lib/tmdbapi";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // 1. Authentication and authorization check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,14 +25,14 @@ export async function GET(
 
     // 3. Get user's viewing history from database
     const [history, totalCount] = await Promise.all([
-      prisma.watchHistory.findMany({
-        where: { userId: params.id },
+      prisma.viewingHistory.findMany({
+        where: { userId: id },
         orderBy: { watchedAt: "desc" },
         skip,
         take: limit,
       }),
-      prisma.watchHistory.count({
-        where: { userId: params.id },
+      prisma.viewingHistory.count({
+        where: { userId: id },
       }),
     ]);
 

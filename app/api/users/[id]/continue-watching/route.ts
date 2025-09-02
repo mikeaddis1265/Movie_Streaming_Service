@@ -8,18 +8,20 @@ import { MediaType } from "@prisma/client";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     // 1. Authentication check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     // 2. Get user's watch history from OUR database
     const history = await prisma.viewingHistory.findMany({
-      where: { userId: params.id },
+      where: { userId: id },
       orderBy: { watchedAt: "desc" },
       take: 10, // Get last 10 watched items
     });
@@ -58,12 +60,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     // 1. Authentication and authorization check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -90,7 +94,7 @@ export async function POST(
     const watchHistory = await prisma.viewingHistory.upsert({
       where: {
         userId_tmdbId_mediaType: {
-          userId: params.id,
+          userId: id,
           tmdbId: parseInt(tmdbId),
           mediaType: mediaType as MediaType,
         },
@@ -102,7 +106,7 @@ export async function POST(
         watchedAt: new Date(),
       },
       create: {
-        userId: params.id,
+        userId: id,
         tmdbId: parseInt(tmdbId),
         mediaType: mediaType as MediaType,
         progress,
@@ -131,11 +135,13 @@ export async function POST(
 // DELETE - Clear a single item or all continue-watching entries
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -145,7 +151,7 @@ export async function DELETE(
     const mediaTypeParam = (searchParams.get("mediaType") || '').toUpperCase();
 
     if (clearAll) {
-      await prisma.viewingHistory.deleteMany({ where: { userId: params.id } });
+      await prisma.viewingHistory.deleteMany({ where: { userId: id } });
       return NextResponse.json({ message: "Continue watching cleared" });
     }
 
@@ -157,7 +163,7 @@ export async function DELETE(
       await prisma.viewingHistory.delete({
         where: {
           userId_tmdbId_mediaType: {
-            userId: params.id,
+            userId: id,
             tmdbId,
             mediaType: mediaTypeParam as any,
           }

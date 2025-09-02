@@ -7,9 +7,10 @@ import { Role } from "@prisma/client";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // 1. Authentication and admin authorization check
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
@@ -48,7 +49,7 @@ export async function PUT(
 
     // 4. Update the user
     const updatedUser = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       select: {
         id: true,
@@ -57,7 +58,6 @@ export async function PUT(
         role: true,
         emailVerified: true,
         createdAt: true,
-        banned: true,
       },
     });
 
@@ -83,9 +83,10 @@ export async function PUT(
 // GET - Get user details for admin
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Authentication and admin authorization check
     const session = await getServerSession(authOptions);
     if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
@@ -97,7 +98,7 @@ export async function GET(
 
     // Get user details with related data
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         email: true,
@@ -105,7 +106,6 @@ export async function GET(
         role: true,
         emailVerified: true,
         createdAt: true,
-        banned: true,
         watchlist: {
           take: 5,
           orderBy: { addedAt: "desc" },

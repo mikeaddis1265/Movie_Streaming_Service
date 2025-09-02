@@ -6,12 +6,13 @@ import { authOptions } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // 1. Authentication and authorization check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -42,14 +43,14 @@ export async function PUT(
 
     // 4. Update user settings (upsert pattern)
     const updatedSettings = await prisma.userSettings.upsert({
-      where: { userId: params.id },
+      where: { userId: id },
       update: {
         ...(language && { language }),
         ...(quality && { quality }),
         ...(autoplay !== undefined && { autoplay }),
       },
       create: {
-        userId: params.id,
+        userId: id,
         language: language || 'en',
         quality: quality || 'hd',
         autoplay: autoplay !== undefined ? autoplay : true,
@@ -74,12 +75,13 @@ export async function PUT(
 // GET - Get user settings
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Authentication check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -88,7 +90,7 @@ export async function GET(
 
     // Get user settings
     const settings = await prisma.userSettings.findUnique({
-      where: { userId: params.id },
+      where: { userId: id },
     });
 
     // Return default settings if none exist

@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next"; // For authentication
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth"; // We'll create this next
+import { authOptions } from "@/lib/auth";
+import { fetchMovieDetails } from "@/lib/tmdbapi";
 
 export async function POST(
   request: NextRequest,
@@ -81,7 +82,44 @@ export async function GET(
       orderBy: { addedAt: "desc" }, // Show newest first
     });
 
-    return NextResponse.json({ data: watchlist });
+    // If no watchlist items, return empty array
+    if (watchlist.length === 0) {
+      return NextResponse.json({ data: [] });
+    }
+
+    // Try to fetch movie details from TMDB, but don't fail if it doesn't work
+    const watchlistWithDetails = await Promise.all(
+      watchlist.map(async (item) => {
+        try {
+          const movieDetails = await fetchMovieDetails(item.tmdbId.toString());
+          return {
+            id: movieDetails.id,
+            title: movieDetails.title,
+            overview: movieDetails.overview,
+            poster_path: movieDetails.poster_path,
+            vote_average: movieDetails.vote_average,
+            release_date: movieDetails.release_date,
+            addedAt: item.addedAt,
+          };
+        } catch (error) {
+          console.error(`Failed to fetch details for TMDB ID ${item.tmdbId}:`, error);
+          // Return a fallback object with basic info
+          return {
+            id: item.tmdbId,
+            title: `Movie ${item.tmdbId}`,
+            overview: "Movie details unavailable",
+            poster_path: null,
+            vote_average: 0,
+            release_date: "",
+            addedAt: item.addedAt,
+          };
+        }
+      })
+    );
+
+    // Filter out any null results and return
+    const validWatchlist = watchlistWithDetails.filter(item => item !== null);
+    return NextResponse.json({ data: validWatchlist });
   } catch (error) {
     console.error("Watchlist GET Error:", error);
     return new NextResponse(
