@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 
-export default function AuthPage() {
+function AuthContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -237,5 +237,21 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-black flex items-center justify-center">
+        <div className="auth-container">
+          <div className="auth-header">
+            <h1 className="auth-title">Loading...</h1>
+          </div>
+        </div>
+      </div>
+    }>
+      <AuthContent />
+    </Suspense>
   );
 }

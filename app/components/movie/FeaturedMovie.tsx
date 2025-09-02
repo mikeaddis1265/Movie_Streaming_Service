@@ -1,4 +1,4 @@
-"use client";
+g"use client";
 
 import Link from "next/link";
 

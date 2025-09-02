@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/app/components/ui/Footer";
@@ -15,7 +15,7 @@ interface Movie {
   release_date: string;
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -187,5 +187,24 @@ export default function SearchPage() {
       
       <Footer />
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+        <div className="container mx-auto px-6 py-12 max-w-7xl">
+          <div className="max-w-3xl mx-auto mb-12">
+            <h1 className="text-4xl font-bold mb-8 text-center">Search Movies</h1>
+            <div className="py-8">
+              <SkeletonLoader count={12} type="movie-card" />
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }
