@@ -28,10 +28,10 @@ export async function GET(
 
     // 0. 6h TTL cache (in-memory, per process)
     // Note: In production, swap with Redis or KV.
-    interface GlobalWithCache extends typeof globalThis {
+    interface GlobalWithCache {
       __recCache?: Map<string, { t: number; data: any }>;
     }
-    const globalWithCache = globalThis as GlobalWithCache;
+    const globalWithCache = globalThis as unknown as GlobalWithCache;
     globalWithCache.__recCache =
       globalWithCache.__recCache || new Map<string, { t: number; data: any }>();
     const cacheKey = `${id}:${page}:${pageSize}`;
