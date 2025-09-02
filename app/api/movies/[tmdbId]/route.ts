@@ -28,7 +28,7 @@ export async function GET(
     let hasActiveSubscription = false;
     
     // Determine if movie requires subscription (popular/recent movies require subscription)
-    const requiresSubscription = movieDetails.popularity > 50 || 
+    const requiresSubscription = (movieDetails.popularity && movieDetails.popularity > 50) || 
                                  new Date(movieDetails.release_date) > new Date('2020-01-01');
 
     // 4. If user is logged in, fetch their personal data from OUR database
