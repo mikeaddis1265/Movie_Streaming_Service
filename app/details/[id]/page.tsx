@@ -1,336 +1,526 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { fetchMovieDetails, fetchMovieCredits } from "@/lib/tmdbapi"; // Import fetchMovieDetails and fetchMovieCredits
-import { useEffect, useState } from "react"; // Import useEffect and useState
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import Footer from '@/app/components/ui/Footer';
+import ModernVideoPlayer from '@/app/components/movie/ModernVideoPlayer';
 
-// Define the Movie interface based on tmdbapi.ts
-interface Movie {
+interface MovieDetails {
   id: number;
   title: string;
   overview: string;
   poster_path: string;
-  backdrop_path?: string;
+  backdrop_path: string;
   vote_average: number;
   vote_count: number;
   release_date: string;
-  runtime?: number;
-  genres?: Array<{ id: number; name: string }>;
-  tagline?: string;
-  budget?: number;
-  revenue?: number;
-  production_companies?: Array<{ id: number; name: string; logo_path?: string }>;
-  production_countries?: Array<{ iso_3166_1: string; name: string }>;
-  spoken_languages?: Array<{ iso_639_1: string; name: string }>;
+  runtime: number;
+  genres: Array<{ id: number; name: string }>;
+  budget: number;
+  revenue: number;
+  tagline: string;
+  status: string;
+  original_language: string;
+  production_companies: Array<{
+    id: number;
+    name: string;
+    logo_path?: string;
+  }>;
+  production_countries: Array<{ iso_3166_1: string; name: string }>;
+  credits: {
+    cast: Array<{
+      id: number;
+      name: string;
+      character: string;
+      profile_path?: string;
+      order: number;
+    }>;
+    crew: Array<{
+      id: number;
+      name: string;
+      job: string;
+      department: string;
+      profile_path?: string;
+    }>;
+  };
+  recommendations: Array<{
+    id: number;
+    title: string;
+    poster_path: string;
+    vote_average: number;
+  }>;
+  userData: {
+    inWatchlist: boolean;
+    userRating: number | null;
+    watchProgress: number | null;
+  };
 }
 
-interface CastMember {
-  id: number;
-  name: string;
-  character: string;
-  profile_path?: string;
-  order: number;
-}
-
-interface CrewMember {
-  id: number;
-  name: string;
-  job: string;
-  department: string;
-  profile_path?: string;
-}
-
-interface MovieCredits {
-  cast: CastMember[];
-  crew: CrewMember[];
-}
-
-export default function MovieDetailsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const [movie, setMovie] = useState<Movie | null>(null);
-  const [credits, setCredits] = useState<MovieCredits | null>(null);
+export default function MovieDetailsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [id, setId] = useState<string>("");
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [inWatchlist, setInWatchlist] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'cast'>('overview');
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+
+  const movieId = params?.id as string;
 
   useEffect(() => {
-    const getParams = async () => {
-      const { id: movieId } = await params;
-      setId(movieId);
-    };
-    getParams();
-  }, [params]);
+    if (!movieId) return;
 
-  useEffect(() => {
-    if (!id) return;
-    
-    const getMovieDetails = async () => {
+    const fetchMovieDetails = async () => {
       try {
         setLoading(true);
-        const [movieData, creditsData] = await Promise.all([
-          fetchMovieDetails(id),
-          fetchMovieCredits(id)
-        ]);
-        setMovie(movieData);
-        setCredits(creditsData);
-      } catch (err: any) {
-        setError(err.message);
+        const response = await fetch(`/api/movies/${movieId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch movie details');
+        }
+        const result = await response.json();
+        setMovie(result.data);
+        setUserRating(result.data.userData.userRating);
+        setInWatchlist(result.data.userData.inWatchlist);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
     };
-    getMovieDetails();
-  }, [id]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-xl">Loading movie details...</div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-red-500 text-xl mb-2">Error loading movie</div>
-        <div className="text-gray-400 mb-4">{error}</div>
-        <div className="text-sm text-gray-500">
-          Movie ID: {id} | Check console for more details
-        </div>
+    fetchMovieDetails();
+  }, [movieId]);
+
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [watchlistMessage, setWatchlistMessage] = useState<string | null>(null);
+
+  const handleWatchlistToggle = async () => {
+    if (!session?.user?.id || !movie || watchlistLoading) return;
+
+    setWatchlistLoading(true);
+    setWatchlistMessage(null);
+
+    try {
+      let response;
+      if (inWatchlist) {
+        // Remove from watchlist
+        response = await fetch(`/api/users/${session.user.id}/watchlist/${movie.id}?mediaType=movie`, {
+          method: 'DELETE',
+        });
+      } else {
+        // Add to watchlist
+        response = await fetch(`/api/users/${session.user.id}/watchlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tmdbId: movie.id, mediaType: 'MOVIE' }),
+        });
+      }
+      
+      if (response.ok) {
+        const wasInWatchlist = inWatchlist;
+        setInWatchlist(!inWatchlist);
+        
+        // Show success message
+        if (wasInWatchlist) {
+          setWatchlistMessage('Removed from watchlist!');
+        } else {
+          setWatchlistMessage('Added to watchlist!');
+        }
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setWatchlistMessage(null), 3000);
+      } else {
+        setWatchlistMessage('Failed to update watchlist. Please try again.');
+        setTimeout(() => setWatchlistMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to update watchlist:', err);
+      setWatchlistMessage('Failed to update watchlist. Please try again.');
+      setTimeout(() => setWatchlistMessage(null), 3000);
+    } finally {
+      setWatchlistLoading(false);
+    }
+  };
+
+  const handleRating = async (rating: number) => {
+    if (!session?.user?.id || !movie) return;
+
+    try {
+      const response = await fetch(`/api/movies/${movie.id}/rating`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: rating, mediaType: 'MOVIE' }),
+      });
+      
+      if (response.ok) {
+        setUserRating(rating);
+      }
+    } catch (err) {
+      console.error('Failed to rate movie:', err);
+    }
+  };
+
+  const formatRuntime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const getDirector = () => {
+    return movie?.credits?.crew?.find(member => member.job === 'Director')?.name || 'Unknown';
+  };
+
+  const handleProgress = async (progress: {
+    played: number;
+    playedSeconds: number;
+  }) => {
+    if (session?.user && progress.playedSeconds > 0 && movie) {
+      try {
+        await fetch(`/api/users/${session.user.id}/continue-watching`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tmdbId: movie.id,
+            mediaType: "MOVIE",
+            progress: Math.round(progress.playedSeconds),
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to save progress:", err);
+      }
+    }
+  };
+
+  const handlePlayMovie = async () => {
+    // Check if movie requires subscription and user doesn't have one
+    if (movie.requiresSubscription && !movie.canWatch) {
+      // Redirect to subscription page
+      router.push('/subscription');
+      return;
+    }
+
+    // Add to viewing history when user starts watching
+    if (session?.user?.id && movie) {
+      try {
+        await fetch(`/api/users/${session.user.id}/viewing-history`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tmdbId: movie.id,
+            mediaType: 'MOVIE',
+            progress: 0
+          }),
+        });
+        console.log('Added to viewing history');
+      } catch (error) {
+        console.error('Failed to add to viewing history:', error);
+      }
+    }
+    
+    setShowVideoPlayer(true);
+    // Prevent body scrolling when modal is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  const handleClosePlayer = () => {
+    setShowVideoPlayer(false);
+    // Restore body scrolling
+    document.body.style.overflow = 'unset';
+  };
+
+  // Close modal on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showVideoPlayer) {
+        handleClosePlayer();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showVideoPlayer]);
+
+  if (loading) {
+    return (
+      <div className="movie-details-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading movie details...</p>
       </div>
-    </div>
-  );
-  
-  if (!movie) return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-xl">Movie not found.</div>
-    </div>
-  );
+    );
+  }
 
-  const backdropUrl = movie.backdrop_path 
-    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
-    : `https://image.tmdb.org/t/p/w1280${movie.poster_path}`;
-
-  const posterUrl = movie.poster_path 
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : '/placeholder-movie.jpg';
+  if (error || !movie) {
+    return (
+      <div className="movie-details-error">
+        <h2>Error Loading Movie</h2>
+        <p>{error || 'Movie not found'}</p>
+        <button onClick={() => router.back()} className="btn-primary">
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="movie-details">
-      {/* Backdrop Header */}
-      <div 
-        className="movie-backdrop"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(20,20,20,0.9)), url(${backdropUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          height: '400px',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: '40px'
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>
-            {movie.title}
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '18px', color: 'white' }}>
-            <span>⭐ {movie.vote_average.toFixed(1)} ({movie.vote_count.toLocaleString()} votes)</span>
-            <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
-            {movie.runtime && <span>{movie.runtime} min</span>}
+    <div className="movie-details-page">
+      {/* Hero Section */}
+      <div className="movie-hero">
+        <div className="movie-hero-backdrop">
+          <Image
+            src={`https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${movie.backdrop_path}`}
+            alt={movie.title}
+            fill
+            className="backdrop-image"
+            priority
+          />
+          <div className="hero-overlay"></div>
+        </div>
+        
+        <div className="movie-hero-content">
+          <div className="hero-poster">
+            <Image
+              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+              alt={movie.title}
+              width={300}
+              height={450}
+              className="poster-image"
+            />
+          </div>
+          
+          <div className="hero-info">
+            <h1 className="movie-title">{movie.title}</h1>
+            {movie.tagline && <p className="movie-tagline">{movie.tagline}</p>}
+            
+            <div className="movie-meta">
+              <span className="rating">
+                ⭐ {movie.vote_average.toFixed(1)}/10
+              </span>
+              <span className="year">
+                {new Date(movie.release_date).getFullYear()}
+              </span>
+              <span className="runtime">
+                {formatRuntime(movie.runtime)}
+              </span>
+              <span className="status">{movie.status}</span>
+            </div>
+            
+            <div className="movie-genres">
+              {movie.genres.map(genre => (
+                <span key={genre.id} className="genre-tag">
+                  {genre.name}
+                </span>
+              ))}
+            </div>
+            
+            <div className="action-buttons">
+              <div className="primary-actions">
+                <button onClick={handlePlayMovie} className={`btn-play ${movie.requiresSubscription && !movie.canWatch ? 'subscription-required' : ''}`}>
+                  {movie.requiresSubscription && !movie.canWatch 
+                    ? '👑 Subscribe to Watch' 
+                    : '▶ Play Movie'
+                  }
+                </button>
+                
+                {session && (
+                  <button 
+                    onClick={handleWatchlistToggle}
+                    disabled={watchlistLoading}
+                    className={`btn-watchlist ${inWatchlist ? 'in-watchlist' : ''} ${watchlistLoading ? 'loading' : ''}`}
+                  >
+                    {watchlistLoading ? (
+                      <span className="loading-content">
+                        <span className="spinner"></span>
+                        {inWatchlist ? 'Removing...' : 'Adding...'}
+                      </span>
+                    ) : (
+                      inWatchlist ? '✓ In Watchlist' : '+ Add to Watchlist'
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {session && (
+                <div className="secondary-actions">
+                  <div className="rating-section">
+                    <span>Rate this movie:</span>
+                    <div className="star-rating">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          onClick={() => handleRating(star * 2)}
+                          className={`star ${(userRating && userRating >= star * 2) ? 'filled' : ''}`}
+                        >
+                          ⭐
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {watchlistMessage && (
+                <div className={`watchlist-message ${watchlistMessage.includes('Failed') ? 'error' : 'success'}`}>
+                  {watchlistMessage}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Movie Details */}
-      <div className="container">
-        <div className="movie-details-grid">
-          {/* Poster */}
-          <div>
-            <img 
-              src={posterUrl} 
-              alt={movie.title}
-              style={{ 
-                width: '100%', 
-                borderRadius: '8px', 
-                boxShadow: '0 4px 8px rgba(0,0,0,0.3)' 
-              }}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder-movie.jpg';
-              }}
+      {/* Full-Screen Video Player Modal */}
+      {showVideoPlayer && (
+        <div className="video-modal-overlay" onClick={handleClosePlayer}>
+          <div className="video-modal-container" onClick={(e) => e.stopPropagation()}>
+            <ModernVideoPlayer
+              videoUrl={`/videos/${movie.id}.mp4`}
+              movieId={movie.id.toString()}
+              onProgress={handleProgress}
             />
           </div>
+        </div>
+      )}
 
-          {/* Details */}
-          <div>
-            {movie.tagline && (
-              <p style={{ 
-                fontSize: '20px', 
-                fontStyle: 'italic', 
-                color: '#d1d5db', 
-                marginBottom: '24px' 
-              }}>
-                "{movie.tagline}"
-              </p>
-            )}
-            
-            <h2 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '16px' }}>Overview</h2>
-            <p style={{ 
-              color: '#d1d5db', 
-              lineHeight: '1.6', 
-              marginBottom: '32px',
-              fontSize: '16px'
-            }}>
-              {movie.overview || 'No description available.'}
-            </p>
-
-            {movie.genres && movie.genres.length > 0 && (
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>Genres</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {movie.genres.map((genre) => (
-                    <span 
-                      key={genre.id}
-                      style={{
-                        backgroundColor: '#374151',
-                        padding: '6px 16px',
-                        borderRadius: '20px',
-                        fontSize: '14px'
-                      }}
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
-              <Link href={`/watch/${id}`} className="button">
-                ▶ Watch Now
-              </Link>
-              <Link 
-                href="/" 
-                className="button"
-                style={{ 
-                  backgroundColor: '#374151',
-                  color: 'white'
-                }}
-              >
-                ← Back to Home
-              </Link>
-            </div>
-          </div>
+      {/* Content Tabs */}
+      <div className="movie-content">
+        <div className="content-tabs">
+          <button 
+            className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button 
+            className={`tab ${activeTab === 'cast' ? 'active' : ''}`}
+            onClick={() => setActiveTab('cast')}
+          >
+            Cast & Crew
+          </button>
         </div>
 
-        {/* Additional Movie Information */}
-        <div style={{ padding: '40px 0', borderTop: '1px solid #374151' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
-            {/* Movie Details */}
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '20px' }}>Movie Details</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: '#d1d5db' }}>
-                <div>
-                  <strong style={{ color: 'white' }}>Release Date:</strong> {new Date(movie.release_date).toLocaleDateString()}
-                </div>
-                <div>
-                  <strong style={{ color: 'white' }}>Runtime:</strong> {movie.runtime ? `${movie.runtime} minutes` : 'N/A'}
-                </div>
-                <div>
-                  <strong style={{ color: 'white' }}>Rating:</strong> {movie.vote_average.toFixed(1)}/10 ({movie.vote_count.toLocaleString()} votes)
-                </div>
-                {movie.budget && movie.budget > 0 && (
-                  <div>
-                    <strong style={{ color: 'white' }}>Budget:</strong> ${movie.budget.toLocaleString()}
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="tab-content overview-tab">
+            <div className="overview-grid">
+              <div className="overview-main">
+                <h3>Synopsis</h3>
+                <p className="movie-overview">{movie.overview}</p>
+                
+                <div className="movie-details-grid">
+                  <div className="detail-item">
+                    <h4>Director</h4>
+                    <p>{getDirector()}</p>
                   </div>
-                )}
-                {movie.revenue && movie.revenue > 0 && (
-                  <div>
-                    <strong style={{ color: 'white' }}>Revenue:</strong> ${movie.revenue.toLocaleString()}
+                  <div className="detail-item">
+                    <h4>Language</h4>
+                    <p>{movie.original_language.toUpperCase()}</p>
                   </div>
-                )}
-                {movie.production_companies && movie.production_companies.length > 0 && (
-                  <div>
-                    <strong style={{ color: 'white' }}>Production:</strong> {movie.production_companies.map(c => c.name).join(', ')}
+                  <div className="detail-item">
+                    <h4>Budget</h4>
+                    <p>{movie.budget > 0 ? formatCurrency(movie.budget) : 'Unknown'}</p>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="detail-item">
+                    <h4>Revenue</h4>
+                    <p>{movie.revenue > 0 ? formatCurrency(movie.revenue) : 'Unknown'}</p>
+                  </div>
+                </div>
 
-            {/* Director & Key Crew */}
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '20px' }}>Key Crew</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: '#d1d5db' }}>
-                {credits && credits.crew
-                  .filter(member => ['Director', 'Producer', 'Writer', 'Screenplay', 'Music'].includes(member.job))
-                  .slice(0, 6)
-                  .map((member, index) => (
-                    <div key={index}>
-                      <strong style={{ color: 'white' }}>{member.job}:</strong> {member.name}
+                {movie.production_companies.length > 0 && (
+                  <div className="production-companies">
+                    <h4>Production Companies</h4>
+                    <div className="companies-grid">
+                      {movie.production_companies.slice(0, 4).map(company => (
+                        <div key={company.id} className="company-item">
+                          {company.logo_path && (
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w200${company.logo_path}`}
+                              alt={company.name}
+                              width={100}
+                              height={50}
+                              className="company-logo"
+                            />
+                          )}
+                          <p>{company.name}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))
-                }
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Cast Section */}
-        {credits && credits.cast && credits.cast.length > 0 && (
-          <div style={{ padding: '40px 0', borderTop: '1px solid #374151' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '24px' }}>Cast</h3>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-              gap: '20px' 
-            }}>
-              {credits.cast.slice(0, 12).map((actor) => (
-                <div 
-                  key={actor.id} 
-                  style={{ 
-                    textAlign: 'center',
-                    backgroundColor: '#1f2937',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <img 
-                    src={actor.profile_path 
-                      ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` 
-                      : '/placeholder-actor.jpg'
-                    }
-                    alt={actor.name}
-                    style={{
-                      width: '100%',
-                      height: '180px',
-                      objectFit: 'cover',
-                      borderRadius: '6px',
-                      marginBottom: '12px'
-                    }}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-actor.jpg';
-                    }}
-                  />
-                  <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
-                    {actor.name}
+        {/* Cast Tab */}
+        {activeTab === 'cast' && (
+          <div className="tab-content cast-tab">
+            <h3>Cast</h3>
+            <div className="cast-grid">
+              {movie.credits?.cast?.slice(0, 12).map(member => (
+                <div key={member.id} className="cast-card">
+                  <div className="cast-image">
+                    {member.profile_path ? (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w200${member.profile_path}`}
+                        alt={member.name}
+                        width={150}
+                        height={225}
+                        className="profile-image"
+                      />
+                    ) : (
+                      <div className="no-image">No Photo</div>
+                    )}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-                    {actor.character}
+                  <div className="cast-info">
+                    <h4>{member.name}</h4>
+                    <p>{member.character}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+
+        {/* Recommendations Section */}
+        {movie.recommendations.length > 0 && (
+          <div className="recommendations-section">
+            <h3>You Might Also Like</h3>
+            <div className="recommendations-grid">
+              {movie.recommendations.slice(0, 6).map(rec => (
+                <Link key={rec.id} href={`/details/${rec.id}`} className="recommendation-card">
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w300${rec.poster_path}`}
+                    alt={rec.title}
+                    width={200}
+                    height={300}
+                    className="rec-poster"
+                  />
+                  <div className="rec-info">
+                    <h4>{rec.title}</h4>
+                    <span className="rec-rating">⭐ {rec.vote_average.toFixed(1)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+      
+      <Footer />
     </div>
   );
 }
