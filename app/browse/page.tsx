@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { discoverMovies, fetchGenres } from "@/lib/tmdbapi";
+import Footer from "@/app/components/ui/Footer";
+import SkeletonLoader from "@/app/components/ui/SkeletonLoader";
+import MovieCard from "@/app/components/movie/MovieCard";
 
 interface Movie {
   id: number;
@@ -19,64 +23,93 @@ interface Genre {
 }
 
 export default function BrowsePage() {
+  const searchParams = useSearchParams();
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [selectedGenre, setSelectedGenre] = useState<string>("All");
   const [selectedYear, setSelectedYear] = useState<string>("All");
+  const [selectedCountry, setSelectedCountry] = useState<string>("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+  const countries = [
+    { code: 'US', name: 'United States' },
+    { code: 'JP', name: 'Japan' },
+    { code: 'KR', name: 'South Korea' },
+    { code: 'CN', name: 'China' },
+    { code: 'IN', name: 'India' },
+    { code: 'GB', name: 'United Kingdom' },
+    { code: 'FR', name: 'France' },
+    { code: 'DE', name: 'Germany' },
+    { code: 'IT', name: 'Italy' },
+    { code: 'ES', name: 'Spain' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'AU', name: 'Australia' },
+    { code: 'BR', name: 'Brazil' },
+    { code: 'MX', name: 'Mexico' },
+    { code: 'RU', name: 'Russia' }
+  ];
 
+
+  // Initialize and react to URL changes (?year=2024&country=JP&type=tv)
   useEffect(() => {
-    const loadGenres = async () => {
-      try {
-        const genresData = await fetchGenres();
-        setGenres(genresData.genres);
-      } catch (err) {
-        console.error('Failed to load genres:', err);
-      }
-    };
-    loadGenres();
-  }, []);
+    const yearParam = searchParams.get("year");
+    const countryParam = searchParams.get("country");
+    if (yearParam) setSelectedYear(yearParam);
+    if (countryParam) setSelectedCountry(countryParam);
+  }, [searchParams]);
 
   useEffect(() => {
     const loadMovies = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const params: any = {};
-        
-        if (selectedGenre !== "All") {
-          const genre = genres.find(g => g.name === selectedGenre);
-          if (genre) {
-            params.with_genres = genre.id.toString();
-          }
+
+        // Handle genre from URL (from navigation)
+        const genreIdParam = searchParams.get("genreId");
+        if (genreIdParam && /^\d+$/.test(genreIdParam)) {
+          params.with_genres = genreIdParam;
         }
-        
+
         if (selectedYear !== "All") {
           params.primary_release_year = selectedYear;
         }
 
-        const moviesData = await discoverMovies(params);
-        setMovies(moviesData.results);
+        if (selectedCountry !== "All") {
+          params.with_origin_country = selectedCountry;
+        }
+
+        const typeParam = searchParams.get('type') || 'movie';
+
+        // Prefer server-side API to avoid client TMDb env issues
+        const qs = new URLSearchParams();
+        if (params.with_genres) qs.set('with_genres', params.with_genres);
+        if (params.primary_release_year) qs.set('primary_release_year', params.primary_release_year);
+        if (params.with_origin_country) qs.set('with_origin_country', params.with_origin_country);
+        if (typeParam === 'tv') qs.set('type', 'tv');
+        const res = await fetch(`/api/movies/browse?${qs.toString()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to fetch filtered movies');
+        const data = await res.json();
+        setMovies(data.data || []);
       } catch (err) {
-        setError('Failed to load movies. Please check your TMDb API configuration.');
-        console.error('Failed to load movies:', err);
+        setError(
+          "Failed to load movies. Please check your TMDb API configuration."
+        );
+        console.error("Failed to load movies:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (genres.length > 0 || selectedGenre === "All") {
-      loadMovies();
-    }
-  }, [selectedGenre, selectedYear, genres]);
+    loadMovies();
+  }, [selectedYear, selectedCountry, searchParams]);
 
   const getImageUrl = (path: string) => {
-    return path ? `https://image.tmdb.org/t/p/w500${path}` : '/placeholder-movie.jpg';
+    return path
+      ? `https://image.tmdb.org/t/p/w500${path}`
+      : "/placeholder-movie.jpg";
   };
 
   return (
@@ -85,25 +118,29 @@ export default function BrowsePage() {
 
       {/* Filters */}
       <div className="browse-filters">
-        <select 
-          value={selectedGenre} 
-          onChange={(e) => setSelectedGenre(e.target.value)} 
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(e.target.value)}
           className="browse-select"
         >
-          <option value="All">All</option>
-          {genres.map(genre => (
-            <option key={genre.id} value={genre.name}>{genre.name}</option>
+          <option value="All">All Years</option>
+          {years.map((year) => (
+            <option key={year} value={year.toString()}>
+              {year}
+            </option>
           ))}
         </select>
 
-        <select 
-          value={selectedYear} 
-          onChange={(e) => setSelectedYear(e.target.value)} 
+        <select
+          value={selectedCountry}
+          onChange={(e) => setSelectedCountry(e.target.value)}
           className="browse-select"
         >
-          <option value="All">All</option>
-          {years.map(year => (
-            <option key={year} value={year.toString()}>{year}</option>
+          <option value="All">All Countries</option>
+          {countries.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.name}
+            </option>
           ))}
         </select>
       </div>
@@ -111,7 +148,8 @@ export default function BrowsePage() {
       {/* Loading State */}
       {loading && (
         <div className="browse-loading">
-          <h2>Loading movies...</h2>
+          <div className="skeleton-section-header mb-8"></div>
+          <SkeletonLoader count={20} type="movie-card" />
         </div>
       )}
 
@@ -127,27 +165,11 @@ export default function BrowsePage() {
 
       {/* Movie Grid */}
       {!loading && !error && (
-        <div className="browse-movie-grid">
-          {movies.map((movie) => (
-            <Link
-              key={movie.id}
-              href={`/details/${movie.id}`}
-              className="browse-movie-card"
-            >
-              <div className="browse-movie-poster">
-                <img
-                  src={getImageUrl(movie.poster_path)}
-                  alt={movie.title}
-                />
-              </div>
-              <h3 className="browse-movie-title">
-                {movie.title}
-              </h3>
-              <div className="browse-movie-info">
-                <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
-                <span>⭐ {movie.vote_average.toFixed(1)}</span>
-              </div>
-            </Link>
+        <div className="movie-grid">
+          {movies.map((movie, index) => (
+            <div key={movie.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+              <MovieCard movie={movie} />
+            </div>
           ))}
         </div>
       )}
@@ -155,9 +177,13 @@ export default function BrowsePage() {
       {/* No Results */}
       {!loading && !error && movies.length === 0 && (
         <div className="browse-no-results">
-          <h2 className="browse-no-results-title">No movies found with current filters</h2>
+          <h2 className="browse-no-results-title">
+            No movies found with current filters
+          </h2>
         </div>
       )}
+      
+      <Footer />
     </div>
   );
 }

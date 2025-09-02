@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import VideoPlayer from "@/app/components/movie/videoplayer";
-import { fetchMovieDetails } from "@/lib/tmdbapi";
+import Footer from "@/app/components/ui/Footer";
 
 interface Movie {
   id: number;
@@ -14,7 +14,11 @@ interface Movie {
   release_date: string;
 }
 
-export default function WatchPage({ params }: { params: Promise<{ id: string }> }) {
+export default function WatchPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const [id, setId] = useState<string>("");
 
   useEffect(() => {
@@ -31,15 +35,18 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     if (!id) return;
-    
+
     const loadMovieDetails = async () => {
       try {
         setLoading(true);
-        const movieData = await fetchMovieDetails(id);
-        setMovie(movieData);
+        // Fetch via server API to leverage server-side TMDb credentials
+        const res = await fetch(`/api/movies/${id}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load movie details");
+        const payload = await res.json();
+        setMovie(payload.data);
       } catch (err) {
-        setError('Failed to load movie details');
-        console.error('Failed to load movie:', err);
+        setError("Failed to load movie details");
+        console.error("Failed to load movie:", err);
       } finally {
         setLoading(false);
       }
@@ -48,23 +55,23 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     loadMovieDetails();
   }, [id]);
 
-  const handleProgress = async (progress: { played: number; playedSeconds: number }) => {
+  const handleProgress = async (progress: {
+    played: number;
+    playedSeconds: number;
+  }) => {
     if (session?.user && progress.playedSeconds > 0) {
-      // Save progress to database
       try {
         await fetch(`/api/users/${session.user.id}/continue-watching`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            movieId: id,
+            tmdbId: Number(id),
+            mediaType: "MOVIE",
             progress: Math.round(progress.playedSeconds),
-            lastWatched: new Date().toISOString()
-          })
+          }),
         });
       } catch (err) {
-        console.error('Failed to save progress:', err);
+        console.error("Failed to save progress:", err);
       }
     }
   };
@@ -81,7 +88,9 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 text-xl mb-2">{error || 'Movie not found'}</div>
+          <div className="text-red-500 text-xl mb-2">
+            {error || "Movie not found"}
+          </div>
           <p className="text-gray-400">
             Make sure your TMDb API is configured properly.
           </p>
@@ -101,13 +110,13 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold mb-2">{movie.title}</h1>
           <div className="flex items-center justify-center gap-4 text-gray-400">
-            <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
+            <span>{movie.release_date?.split("-")[0] || "N/A"}</span>
             <span>⭐ {movie.vote_average.toFixed(1)}</span>
           </div>
         </div>
 
         {/* Video Player */}
-        <VideoPlayer 
+        <VideoPlayer
           videoUrl={videoUrl}
           movieId={id}
           onProgress={handleProgress}
@@ -117,7 +126,7 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         <div className="mt-8 max-w-4xl mx-auto">
           <h2 className="text-xl font-semibold mb-4">About this movie</h2>
           <p className="text-gray-300 leading-relaxed">
-            {movie.overview || 'No description available.'}
+            {movie.overview || "No description available."}
           </p>
         </div>
 
@@ -125,14 +134,16 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
         <div className="mt-8 max-w-4xl mx-auto">
           <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
             <p className="text-yellow-200 text-sm">
-              <strong>Note:</strong> This is a demo implementation. In a production environment, 
-              you would integrate with a video hosting service or CDN to serve actual movie content.
-              The video player is fully functional and ready for real video URLs.
+              <strong>Note:</strong> This is a demo implementation. In a
+              production environment, you would integrate with a video hosting
+              service or CDN to serve actual movie content. The video player is
+              fully functional and ready for real video URLs.
             </p>
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }
-
