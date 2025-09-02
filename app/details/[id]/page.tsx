@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Footer from '@/app/components/ui/Footer';
-import ModernVideoPlayer from "@/app/components/movie/ModernVideoplayer";
+import ModernVideoPlayer from "@/app/components/movie/ModernVideoPlayer";
 
 interface MovieDetails {
   id: number;
@@ -57,6 +57,8 @@ interface MovieDetails {
     userRating: number | null;
     watchProgress: number | null;
   };
+  requiresSubscription?: boolean;
+  canWatch?: boolean;
 }
 
 export default function MovieDetailsPage() {
@@ -85,8 +87,8 @@ export default function MovieDetailsPage() {
         }
         const result = await response.json();
         setMovie(result.data);
-        setUserRating(result.data.userData.userRating);
-        setInWatchlist(result.data.userData.inWatchlist);
+        setUserRating(result.data.userData?.userRating);
+        setInWatchlist(result.data.userData?.inWatchlist);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -206,7 +208,7 @@ export default function MovieDetailsPage() {
 
   const handlePlayMovie = async () => {
     // Check if movie requires subscription and user doesn't have one
-    if (movie.requiresSubscription && !movie.canWatch) {
+    if (movie?.requiresSubscription && !movie?.canWatch) {
       // Redirect to subscription page
       router.push('/subscription');
       return;
@@ -327,8 +329,8 @@ export default function MovieDetailsPage() {
             
             <div className="action-buttons">
               <div className="primary-actions">
-                <button onClick={handlePlayMovie} className={`btn-play ${movie.requiresSubscription && !movie.canWatch ? 'subscription-required' : ''}`}>
-                  {movie.requiresSubscription && !movie.canWatch 
+                <button onClick={handlePlayMovie} className={`btn-play ${movie?.requiresSubscription && !movie?.canWatch ? 'subscription-required' : ''}`}>
+                  {movie?.requiresSubscription && !movie?.canWatch 
                     ? '👑 Subscribe to Watch' 
                     : '▶ Play Movie'
                   }
