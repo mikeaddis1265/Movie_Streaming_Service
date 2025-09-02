@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { discoverMovies, fetchGenres } from "@/lib/tmdbapi";
@@ -22,7 +22,7 @@ interface Genre {
   name: string;
 }
 
-export default function BrowsePage() {
+function BrowseContent() {
   const searchParams = useSearchParams();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("All");
@@ -185,5 +185,21 @@ export default function BrowsePage() {
       
       <Footer />
     </div>
+  );
+}
+
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={
+      <div className="container">
+        <h1>Browse Movies/TV Shows</h1>
+        <div className="browse-loading">
+          <div className="skeleton-section-header mb-8"></div>
+          <SkeletonLoader count={20} type="movie-card" />
+        </div>
+      </div>
+    }>
+      <BrowseContent />
+    </Suspense>
   );
 }
