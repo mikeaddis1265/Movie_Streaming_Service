@@ -20,7 +20,7 @@ export async function GET(
     console.log('Looking for subscription for user:', id);
     const subscription = await prisma.subscription.findUnique({
       where: { userId: id },
-      include: { user: { select: { email: true, name: true, profilePicture: true } } },
+      include: { user: { select: { email: true, name: true, image: true } } },
     });
     console.log('Found subscription:', subscription);
 
@@ -128,7 +128,7 @@ export async function DELETE(
       message: "Subscription deleted successfully",
       data: deletedSubscription 
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Delete subscription error:", error);
     
     if (error.code === 'P2025') {

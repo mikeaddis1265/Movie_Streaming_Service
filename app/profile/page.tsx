@@ -15,6 +15,7 @@ interface Movie {
   vote_average?: number | null;
   release_date?: string;
   progress?: number;
+  watchedAt?: string;
 }
 
 interface UserProfile {

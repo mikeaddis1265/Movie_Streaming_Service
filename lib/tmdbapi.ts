@@ -31,7 +31,9 @@ interface MovieResult {
 
 interface MovieListResponse {
   results: MovieResult[];
-  // Add other properties as needed
+  page: number;
+  total_pages: number;
+  total_results: number;
 }
 
 interface GenreResult {
@@ -50,7 +52,7 @@ const BASE_URL = "https://api.themoviedb.org/3";
 // TMDb supports two authentication methods:
 // 1. API Key as query parameter: ?api_key=YOUR_KEY
 // 2. Bearer token in Authorization header
-const getAuthHeaders = () => {
+const getAuthHeaders = (): HeadersInit => {
   if (ACCESS_TOKEN) {
     return {
       Authorization: `Bearer ${ACCESS_TOKEN}`,

@@ -28,13 +28,14 @@ export async function GET(
 
     // 0. 6h TTL cache (in-memory, per process)
     // Note: In production, swap with Redis or KV.
-    // @ts-ignore
-    globalThis.__recCache =
-      globalThis.__recCache || new Map<string, { t: number; data: any }>();
-    // @ts-ignore
+    interface GlobalWithCache extends typeof globalThis {
+      __recCache?: Map<string, { t: number; data: any }>;
+    }
+    const globalWithCache = globalThis as GlobalWithCache;
+    globalWithCache.__recCache =
+      globalWithCache.__recCache || new Map<string, { t: number; data: any }>();
     const cacheKey = `${id}:${page}:${pageSize}`;
-    // @ts-ignore
-    const cached = !cacheBypass ? globalThis.__recCache.get(cacheKey) : null;
+    const cached = !cacheBypass ? globalWithCache.__recCache.get(cacheKey) : null;
     // 6h TTL
     if (cached && Date.now() - cached.t < 6 * 60 * 60 * 1000) {
       return NextResponse.json(cached.data);
@@ -142,8 +143,7 @@ export async function GET(
     };
 
     // Cache response
-    // @ts-ignore
-    globalThis.__recCache.set(cacheKey, { t: Date.now(), data: response });
+    globalWithCache.__recCache!.set(cacheKey, { t: Date.now(), data: response });
     return NextResponse.json(response);
   } catch (error) {
     console.error("Recommendations error:", error);
@@ -180,7 +180,7 @@ function getPreferredGenres(watchlist: any[], ratings: any[]): number[] {
   const defaultGenres = [28, 12, 35, 18, 10749]; // Action, Adventure, Comedy, Drama, Romance
 
   // Analyze user preferences to override defaults
-  const userGenrePreferences = [
+  const userGenrePreferences: number[] = [
     // Add logic to analyze user watchlist and ratings
   ];
 

@@ -12,7 +12,7 @@ const ModernVideoPlayer = ({ videoUrl, movieId, onProgress }: VideoPlayerProps) 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Player state
   const [isPlaying, setIsPlaying] = useState(false);
