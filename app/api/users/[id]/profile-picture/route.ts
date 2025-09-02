@@ -7,7 +7,7 @@ import path from "path";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = params.id;
+    const { id: userId } = await params;
     
     // Check if user is updating their own profile or is an admin
     if (session.user.id !== userId && session.user.role !== "ADMIN") {
@@ -92,7 +92,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -101,7 +101,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = params.id;
+    const { id: userId } = await params;
     
     // Check if user is updating their own profile or is an admin
     if (session.user.id !== userId && session.user.role !== "ADMIN") {
