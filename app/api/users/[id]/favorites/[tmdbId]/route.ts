@@ -6,11 +6,12 @@ import { MediaType } from "@prisma/client";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; tmdbId: string } }
+  { params }: { params: Promise<{ id: string; tmdbId: string }> }
 ) {
   try {
+    const { id, tmdbId } = await params;
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -26,8 +27,8 @@ export async function DELETE(
     await prisma.favorite.delete({
       where: {
         userId_tmdbId_mediaType: {
-          userId: params.id,
-          tmdbId: parseInt(params.tmdbId, 10),
+          userId: id,
+          tmdbId: parseInt(tmdbId, 10),
           mediaType: mediaType as MediaType,
         },
       },

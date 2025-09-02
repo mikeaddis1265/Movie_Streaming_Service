@@ -7,12 +7,13 @@ import { discoverMovies, fetchTrendingMovies } from "@/lib/tmdbapi";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // 1. Authentication and authorization check
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== params.id) {
+    if (!session || session.user.id !== id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -31,7 +32,7 @@ export async function GET(
     globalThis.__recCache =
       globalThis.__recCache || new Map<string, { t: number; data: any }>();
     // @ts-ignore
-    const cacheKey = `${params.id}:${page}:${pageSize}`;
+    const cacheKey = `${id}:${page}:${pageSize}`;
     // @ts-ignore
     const cached = !cacheBypass ? globalThis.__recCache.get(cacheKey) : null;
     // 6h TTL
@@ -42,16 +43,16 @@ export async function GET(
     // 2. Get user's preferences from database
     const [userWatchlist, userRatings, userHistory] = await Promise.all([
       prisma.watchlistItem.findMany({
-        where: { userId: params.id },
+        where: { userId: id },
         take: 50,
       }),
       prisma.rating.findMany({
-        where: { userId: params.id, value: { gte: 4 } },
+        where: { userId: id, value: { gte: 4 } },
         orderBy: { createdAt: "desc" },
         take: 50,
       }),
       prisma.viewingHistory.findMany({
-        where: { userId: params.id },
+        where: { userId: id },
         orderBy: { watchedAt: "desc" },
         take: 50,
       }),
