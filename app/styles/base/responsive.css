@@ -1,0 +1,243 @@
+/* Global Responsive Design Fixes */
+@media (max-width: 1200px) {
+  .container {
+    max-width: 1000px;
+    padding: 100px 24px 40px;
+  }
+}
+
+@media (max-width: 968px) {
+  .container {
+    max-width: 800px;
+    padding: 90px 20px 35px;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  h2 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 80px 16px 30px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  /* Movie Details Responsive */
+  .movie-hero {
+    min-height: 60vh;
+  }
+  
+  .movie-hero-content {
+    padding: 0 16px;
+  }
+  
+  .movie-info h1 {
+    font-size: 2.5rem;
+  }
+  
+  .movie-genres {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .genre-tag {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+  
+  .btn-play, .btn-watchlist {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Browse Page Responsive */
+  .browse-loading, .browse-no-results {
+    padding: 40px 16px;
+  }
+  
+  .browse-movie-title {
+    font-size: 14px;
+  }
+  
+  .browse-movie-info {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 70px 12px 25px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  h2 {
+    font-size: 1.3rem;
+  }
+  
+  /* Movie Details Mobile */
+  .movie-hero {
+    min-height: 50vh;
+  }
+  
+  .movie-info h1 {
+    font-size: 2rem;
+  }
+  
+  .movie-overview {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  .movie-cast {
+    gap: 12px;
+  }
+  
+  .cast-member {
+    min-width: 100px;
+  }
+  
+  .cast-photo {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .cast-name {
+    font-size: 0.8rem;
+  }
+  
+  .cast-character {
+    font-size: 0.7rem;
+  }
+  
+  /* Subscription Page Mobile */
+  .subscription-hero {
+    padding: 100px 0 60px;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+  }
+  
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 16px;
+  }
+  
+  .pricing-card {
+    padding: 32px 24px;
+  }
+  
+  .pricing-card.popular {
+    transform: none;
+  }
+  
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 60px 10px 20px;
+  }
+  
+  h1 {
+    font-size: 1.6rem;
+  }
+  
+  /* Ultra Mobile Fixes */
+  .movie-info h1 {
+    font-size: 1.8rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .pricing-card {
+    padding: 24px 20px;
+  }
+  
+  .price-amount {
+    font-size: 2.5rem;
+  }
+  
+  .subscribe-button {
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+  
+  /* Search Page Mobile */
+  .ms-search {
+    margin: 0;
+  }
+  
+  /* Auth Page Mobile */
+  .auth-container {
+    padding: 15px 10px;
+  }
+  
+  .auth-form-container {
+    padding: 30px 20px;
+    margin: 0;
+  }
+  
+  .auth-title {
+    font-size: 2rem;
+  }
+}
+
+/* Ultra Small Devices */
+@media (max-width: 360px) {
+  .container {
+    padding: 50px 8px 15px;
+  }
+  
+  .ms-logo-hd, .ms-logo-today {
+    font-size: 16px;
+  }
+  
+  .movie-info h1 {
+    font-size: 1.5rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .browse-movie-grid {
+    gap: 6px;
+  }
+  
+  .pricing-card {
+    padding: 20px 16px;
+  }
+  
+  .price-amount {
+    font-size: 2rem;
+  }
+}

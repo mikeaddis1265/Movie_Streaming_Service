@@ -1,0 +1,643 @@
+/* Base Global Styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%, #0f0f0f 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Sophisticated Background Pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 0%, transparent 40%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.015) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+#__next {
+  min-height: 100vh;
+}
+
+/* CSS Variables */
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+  --primary-color: #3b82f6;
+  --secondary-color: #1d4ed8;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+}
+
+/* Ensure all text is white by default */
+h1, h2, h3, h4, h5, h6, p, div, span, a {
+  color: inherit;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1, h2, h3 {
+  margin: 10px 0;
+}
+
+/* Reset any default link styling */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+/* Reset button styling */
+button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Reset form element styling */
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+/* Container styles */
+.container {
+  padding: 20px;
+}
+
+/* Homepage sections spacing */
+.container > div {
+  margin-bottom: 40px;
+}
+
+.container > div:last-child {
+  margin-bottom: 20px;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Standardized Card Styles - Universal Across All Pages */
+.standard-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(25px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.standard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.standard-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+.standard-card:hover::before {
+  opacity: 1;
+}
+
+/* Movie Cards - Consistent Styling Across All Pages */
+.movie-card-standard {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  text-decoration: none;
+  color: white;
+  display: block;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.movie-card-standard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.movie-card-standard:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+.movie-card-standard:hover::before {
+  opacity: 1;
+}
+
+/* Movie Poster Container */
+.movie-poster-container {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  background: #374151;
+}
+
+.movie-poster-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.movie-card-standard:hover .movie-poster-image {
+  transform: scale(1.1);
+}
+
+/* Movie Overlay with Play Button and Quick Actions */
+.movie-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.3) 50%, 
+    rgba(0, 0, 0, 0.9) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.movie-card-standard:hover .movie-overlay {
+  opacity: 1;
+}
+
+.play-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-size: 0;
+}
+
+.play-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-btn {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-btn:hover {
+  background: rgba(59, 130, 246, 0.7);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: scale(1.1);
+}
+
+/* Movie Info Section */
+.movie-info-standard {
+  padding: 20px;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.movie-title-standard {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 42px;
+}
+
+.movie-meta-standard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.movie-rating-standard {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fbbf24;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.movie-year-standard {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Legacy Browse Movie Card Classes - Map to Standard */
+.browse-movie-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  text-decoration: none !important;
+  color: white !important;
+  display: block !important;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+.browse-movie-card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(59, 130, 246, 0.1) !important;
+}
+
+.browse-movie-poster {
+  position: relative !important;
+  aspect-ratio: 2/3 !important;
+  overflow: hidden !important;
+  background: #374151 !important;
+}
+
+.browse-movie-poster img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.4s ease !important;
+}
+
+.browse-movie-card:hover .browse-movie-poster img {
+  transform: scale(1.1) !important;
+}
+
+.browse-movie-info {
+  padding: 20px !important;
+  min-height: 80px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.browse-movie-title {
+  color: white !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  margin-bottom: 12px !important;
+  line-height: 1.3 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  min-height: 42px !important;
+}
+
+.browse-movie-meta {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: auto !important;
+}
+
+.browse-movie-rating {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  color: #fbbf24 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.browse-movie-year {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Essential Movie Grid Styles - Consistent Across All Pages */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 32px;
+  margin-top: 24px;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+  min-height: 200px;
+}
+
+/* Browse Page Movie Grid Override */
+.browse-movie-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 32px !important;
+  margin-bottom: 60px !important;
+  padding: 20px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  min-height: 200px !important;
+}
+
+/* Elegant Grid Animation */
+.movie-grid > * {
+  animation: fadeInUp 0.8s ease-out forwards !important;
+  opacity: 0;
+  transform: translateY(30px);
+  will-change: opacity, transform;
+}
+
+.movie-grid > *:nth-child(1) { animation-delay: 0.1s; }
+.movie-grid > *:nth-child(2) { animation-delay: 0.2s; }
+.movie-grid > *:nth-child(3) { animation-delay: 0.3s; }
+.movie-grid > *:nth-child(4) { animation-delay: 0.4s; }
+.movie-grid > *:nth-child(5) { animation-delay: 0.5s; }
+.movie-grid > *:nth-child(6) { animation-delay: 0.6s; }
+.movie-grid > *:nth-child(7) { animation-delay: 0.7s; }
+.movie-grid > *:nth-child(8) { animation-delay: 0.8s; }
+.movie-grid > *:nth-child(9) { animation-delay: 0.9s; }
+.movie-grid > *:nth-child(10) { animation-delay: 1.0s; }
+
+/* Ensure movie cards are always visible after animation */
+.movie-grid > *:not([style*="opacity: 0"]) {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Ensure movie cards are always visible */
+.browse-movie-card {
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .movie-grid > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+}
+
+/* Elegant Button Styles */
+.button {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  cursor: pointer !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.button::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+  transition: left 0.5s ease !important;
+}
+
+.button:hover::before {
+  left: 100% !important;
+}
+
+.button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5) !important;
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+}
+
+/* Basic video player styles */
+.video-player {
+  margin-top: 20px;
+}
+
+/* Basic movie details styles */
+.movie-details {
+  min-height: 100vh;
+  background-color: #141414;
+  color: white;
+}
+
+.movie-backdrop {
+  background-size: cover;
+  background-position: center;
+  height: 400px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 40px;
+}
+
+.movie-details-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  padding: 40px 0;
+}
+
+/* Loading Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Utility Classes */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* Hide elements */
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .movie-details-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .movie-backdrop {
+    padding: 20px;
+    height: 300px;
+  }
+  
+  .movie-backdrop h1 {
+    font-size: 32px !important;
+  }
+}
