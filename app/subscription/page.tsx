@@ -383,7 +383,7 @@ export default function SubscriptionPage() {
         <div className="hero-background"></div>
         <div className="hero-content">
           <div className="hero-badge">
-            <span>✨ Premium Experience</span>
+            <span>Premium Experience</span>
           </div>
           <h1 className="hero-title">
             Choose Your Perfect Plan
@@ -400,7 +400,7 @@ export default function SubscriptionPage() {
                 <div className="subscription-plan">
                   <span className="plan-name">{userSubscription.planName}</span>
                   <span className={`plan-status ${userSubscription.status}`}>
-                    {userSubscription.status === 'active' ? '✓ Active' : '! Expired'}
+                    {userSubscription.status === 'active' ? 'Active' : 'Expired'}
                   </span>
                 </div>
                 <p className="subscription-expires">
@@ -429,7 +429,7 @@ export default function SubscriptionPage() {
                 {userSubscription.status === 'active' && userSubscription.cancelAtPeriodEnd && (
                   <div className="subscription-actions">
                     <div className="cancel-notice">
-                      <p>⚠️ Your subscription is set to cancel on {new Date(userSubscription.expiresAt).toLocaleDateString()}</p>
+                      <p>Your subscription is set to cancel on {new Date(userSubscription.expiresAt).toLocaleDateString()}</p>
                     </div>
                     <button
                       onClick={() => handleSubscriptionAction('resume')}
@@ -459,7 +459,7 @@ export default function SubscriptionPage() {
         {successMessage && (
           <div className="success-message">
             <div className="success-content">
-              <span className="success-icon">🎉</span>
+              <span className="success-icon">✓</span>
               <p>{successMessage}</p>
               <button onClick={() => setSuccessMessage(null)} className="success-dismiss">
                 Dismiss
@@ -472,7 +472,7 @@ export default function SubscriptionPage() {
         {error && (
           <div className="error-message">
             <div className="error-content">
-              <span className="error-icon">⚠️</span>
+              <span className="error-icon">!</span>
               <p>{error}</p>
               <button onClick={() => setError(null)} className="error-dismiss">
                 Dismiss
@@ -498,14 +498,14 @@ export default function SubscriptionPage() {
                 {/* Popular Badge */}
                 {plan.isPopular && (
                   <div className="popular-badge">
-                    <span>👑 Most Popular</span>
+                    <span>Most Popular</span>
                   </div>
                 )}
 
                 {/* Current Plan Badge */}
                 {isCurrentPlan(plan.name) && (
                   <div className="current-badge">
-                    <span>✓ Your Plan</span>
+                    <span>Your Plan</span>
                   </div>
                 )}
 
@@ -615,7 +615,7 @@ export default function SubscriptionPage() {
                 <li>✓ You'll keep access until {userSubscription && new Date(userSubscription.expiresAt).toLocaleDateString()}</li>
                 <li>✓ No immediate charges</li>
                 <li>✓ You can resume anytime before the end date</li>
-                <li>⚠️ After the end date, you'll lose access to premium features</li>
+                <li>! After the end date, you'll lose access to premium features</li>
               </ul>
             </div>
             <div className="dialog-actions">

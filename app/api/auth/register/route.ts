@@ -33,13 +33,13 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
     
-    // Create user (not verified initially)
+    // Create user (auto-verified in development)
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
-        emailVerified: null, // User must verify email
+        emailVerified: process.env.NODE_ENV === 'development' ? new Date() : null,
       },
       select: {
         id: true,
@@ -65,9 +65,13 @@ export async function POST(req: Request) {
     // Send verification email
     await sendVerificationEmail({ email, token });
     
+    const message = process.env.NODE_ENV === 'development' 
+      ? "Registration successful! You can now login immediately."
+      : "Registration successful. Please check your email to verify your account.";
+      
     return createSuccessResponse(
       { user },
-      "Registration successful. Please check your email to verify your account.",
+      message,
       201
     );
     

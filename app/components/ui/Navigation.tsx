@@ -189,10 +189,12 @@ export default function Navigation() {
           {session ? (
             <div className="ms-user-section">
               {userSubscription?.hasSubscription && session.user.role !== "ADMIN" && (
-                <span className="ms-premium-badge">⭐ Premium</span>
+                <span className="ms-premium-badge">Premium</span>
               )}
               {session.user.role === "ADMIN" && (
-                <span className="ms-admin-badge">👑 Admin</span>
+                <Link href="/admin" className="ms-admin-badge">
+                  Admin
+                </Link>
               )}
               {!userSubscription?.hasSubscription && session.user.role !== "ADMIN" && (
                 <Link href="/subscription" className="ms-get-premium">

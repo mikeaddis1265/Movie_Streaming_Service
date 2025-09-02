@@ -18,15 +18,15 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
 
-  // TMDb API
-  TMDB_API_KEY: z.string().min(1, "TMDB_API_KEY is required"),
+  // TMDb API  
+  TMDB_API_KEY: z.string().optional(),
   TMDB_READ_ACCESS_TOKEN: z.string().optional(),
 
   // Chapa Payments
-  CHAPA_SECRET_KEY: z.string().min(1, "CHAPA_SECRET_KEY is required"),
+  CHAPA_SECRET_KEY: z.string().optional(),
   CHAPA_PUBLIC_KEY: z.string().optional(),
-  CHAPA_CALLBACK_URL: z.string().url().optional(),
-  CHAPA_RETURN_URL: z.string().url().optional(),
+  CHAPA_CALLBACK_URL: z.string().optional(),
+  CHAPA_RETURN_URL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
