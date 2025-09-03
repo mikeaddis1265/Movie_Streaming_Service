@@ -130,8 +130,8 @@ export async function POST(request: NextRequest) {
           tx_ref: txRef,
           callback_url:
             "https://movie-streaming-service-theta.vercel.app/api/webhooks/chapa",
-          // Ensure tx_ref is present on return URL even if provider doesn't append it; pass through returnTo if provided
-          return_url: `https://movie-streaming-service-theta.vercel.app/subscription/success?tx_ref=${encodeURIComponent(
+          // Redirect to home page after successful payment instead of success page
+          return_url: `https://movie-streaming-service-theta.vercel.app/?payment=success&tx_ref=${encodeURIComponent(
             txRef
           )}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`,
           meta: {
