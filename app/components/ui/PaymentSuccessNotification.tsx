@@ -57,25 +57,33 @@ export default function PaymentSuccessNotification() {
       // Wait a moment for database to be fully updated
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Wait for webhook to complete database operations
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // Update the session to reflect subscription changes
-      console.log("Updating session...");
+      console.log("Updating session with subscription data...");
       await updateSession();
       
-      // Wait another moment for session update
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for session to be fully updated
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Trigger subscription update event for other components
-      console.log("Dispatching subscription-updated event");
+      // Dispatch events to notify all components
+      console.log("Dispatching subscription update events...");
+      
+      // Primary subscription update event
       window.dispatchEvent(new Event("subscription-updated"));
       
-      // Also dispatch a more specific payment success event
+      // Specific payment success event with details
       window.dispatchEvent(new CustomEvent("payment-success", { 
         detail: { txRef, timestamp: Date.now() } 
       }));
       
-      // Force a more aggressive refresh after a short delay
+      // Force update of all subscription-dependent components
+      window.dispatchEvent(new Event("force-subscription-refresh"));
+      
+      // Ensure page refresh happens to guarantee all components see the update
       setTimeout(() => {
-        console.log("Forcing page refresh to ensure UI updates");
+        console.log("Performing page refresh to ensure complete subscription update");
         window.location.reload();
       }, 3000);
       

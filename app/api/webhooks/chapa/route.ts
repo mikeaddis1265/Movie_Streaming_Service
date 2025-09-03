@@ -57,6 +57,14 @@ export async function POST(request: NextRequest) {
     else if (plan.interval === "year") endDate.setFullYear(endDate.getFullYear() + 1);
 
     console.log("Creating/updating subscription for user:", userId);
+    console.log("Plan details:", { 
+      planId: plan.id, 
+      planName: plan.name, 
+      interval: plan.interval,
+      currentDate: currentDate.toISOString(),
+      endDate: endDate.toISOString()
+    });
+    
     const subscription = await prisma.subscription.upsert({
       where: { userId },
       update: {
@@ -76,9 +84,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log("Subscription created/updated:", subscription.id);
+    console.log("Subscription created/updated successfully:");
+    console.log("- Subscription ID:", subscription.id);
+    console.log("- User ID:", subscription.userId);
+    console.log("- Plan ID:", subscription.planId);
+    console.log("- Status:", subscription.status);
+    console.log("- Period:", subscription.currentPeriodStart, "to", subscription.currentPeriodEnd);
+    
+    // Verify the subscription was created by fetching it back
+    const verifySubscription = await prisma.subscription.findUnique({
+      where: { userId },
+      include: { user: { select: { email: true } } }
+    });
+    console.log("Verification - Subscription exists:", !!verifySubscription);
+    console.log("Verification - User email:", verifySubscription?.user?.email);
+    
     console.log("=== WEBHOOK PROCESSED SUCCESSFULLY ===");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ 
+      ok: true, 
+      subscriptionId: subscription.id,
+      status: subscription.status,
+      userId: subscription.userId 
+    });
   } catch (error) {
     console.error("Chapa webhook error:", error);
     return NextResponse.json({ error: "Webhook error" }, { status: 500 });

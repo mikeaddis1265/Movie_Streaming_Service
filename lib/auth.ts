@@ -110,18 +110,33 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-      } else if (token.email) {
-        // Fetch user data from database to get role and id
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email }
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
+      } else if (token.email || trigger === "update") {
+        // Fetch user data from database to get updated role, subscription info
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email },
+            include: { 
+              subscription: true 
+            }
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+            // Add subscription data to token to force session update
+            const currentDate = new Date();
+            token.hasActiveSubscription = !!(dbUser.subscription && 
+                                            dbUser.subscription.status === "ACTIVE" && 
+                                            dbUser.subscription.currentPeriodEnd && 
+                                            dbUser.subscription.currentPeriodEnd > currentDate);
+            token.subscription = dbUser.subscription;
+            token.lastUpdated = Date.now(); // Force token refresh
+          }
+        } catch (error) {
+          console.error('Error fetching user data in JWT callback:', error);
         }
       }
       return token;
@@ -130,6 +145,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        (session as any).hasActiveSubscription = token.hasActiveSubscription;
+        (session as any).subscription = token.subscription;
       }
       return session;
     },

@@ -107,31 +107,53 @@ function MovieDetailsContent() {
     const handleSubscriptionUpdate = () => {
       if (!movieId) return;
 
-      // Refetch movie details to get updated subscription status
-      fetch(`/api/movies/${movieId}`)
-        .then((response) => response.json())
-        .then((result) => {
-          if (result.data) {
-            setMovie(result.data);
-            setUserRating(result.data.userData?.userRating);
-            setInWatchlist(result.data.userData?.inWatchlist);
-            setInFavorites(result.data.userData?.inFavorites);
-          }
-        })
-        .catch((error) => {
-          console.error(
-            "Failed to refresh movie data after subscription update:",
-            error
-          );
-        });
+      console.log("Subscription update event received, refreshing movie data...");
+      
+      // Add a small delay to ensure the database has been updated
+      setTimeout(() => {
+        // Refetch movie details to get updated subscription status
+        fetch(`/api/movies/${movieId}?_t=${Date.now()}`) // Add cache busting
+          .then((response) => response.json())
+          .then((result) => {
+            if (result.data) {
+              console.log("Movie data refreshed:", {
+                requiresSubscription: result.data.requiresSubscription,
+                hasActiveSubscription: result.data.hasActiveSubscription,
+                canWatch: result.data.canWatch
+              });
+              setMovie(result.data);
+              setUserRating(result.data.userData?.userRating);
+              setInWatchlist(result.data.userData?.inWatchlist);
+              setInFavorites(result.data.userData?.inFavorites);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              "Failed to refresh movie data after subscription update:",
+              error
+            );
+          });
+      }, 1000); // Give time for database to be updated
+    };
+
+    const handlePaymentSuccess = () => {
+      console.log("Payment success event received, refreshing movie data...");
+      handleSubscriptionUpdate();
+    };
+
+    const handleForceRefresh = () => {
+      console.log("Force subscription refresh event received");
+      handleSubscriptionUpdate();
     };
 
     window.addEventListener("subscription-updated", handleSubscriptionUpdate);
+    window.addEventListener("payment-success", handlePaymentSuccess);
+    window.addEventListener("force-subscription-refresh", handleForceRefresh);
+    
     return () => {
-      window.removeEventListener(
-        "subscription-updated",
-        handleSubscriptionUpdate
-      );
+      window.removeEventListener("subscription-updated", handleSubscriptionUpdate);
+      window.removeEventListener("payment-success", handlePaymentSuccess);
+      window.removeEventListener("force-subscription-refresh", handleForceRefresh);
     };
   }, [movieId]);
 

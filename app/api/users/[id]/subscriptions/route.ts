@@ -17,12 +17,25 @@ export async function GET(
     }
 
     // 2. Get user's subscription from database
+    console.log('=== SUBSCRIPTION STATUS CHECK ===');
     console.log('Looking for subscription for user:', id);
+    console.log('Session user ID:', session.user.id);
+    console.log('Request timestamp:', new Date().toISOString());
+    
     const subscription = await prisma.subscription.findUnique({
       where: { userId: id },
       include: { user: { select: { email: true, name: true, image: true } } },
     });
-    console.log('Found subscription:', subscription);
+    console.log('Found subscription:', subscription ? {
+      id: subscription.id,
+      userId: subscription.userId,
+      planId: subscription.planId,
+      status: subscription.status,
+      currentPeriodStart: subscription.currentPeriodStart,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      userEmail: subscription.user?.email
+    } : null);
 
     // 3. Check if subscription is active (based on currentPeriodEnd)
     const currentDate = new Date();
@@ -42,7 +55,16 @@ export async function GET(
       }
     }
 
-    // 4. Return subscription status
+    // 4. Log final determination and return subscription status
+    console.log('=== SUBSCRIPTION STATUS RESULT ===');
+    console.log('Subscription exists:', !!subscription);
+    console.log('Status from DB:', subscription?.status);
+    console.log('Current date:', currentDate.toISOString());
+    console.log('Period end:', subscription?.currentPeriodEnd?.toISOString());
+    console.log('Is active:', isActive);
+    console.log('Days remaining:', daysRemaining);
+    console.log('=====================================');
+    
     return NextResponse.json({
       data: {
         hasSubscription: isActive,
