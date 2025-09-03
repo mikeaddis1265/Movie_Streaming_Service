@@ -1,7 +1,6 @@
 import FeaturedMovie from "@/app/components/movie/FeaturedMovie";
 import MovieCard from "@/app/components/movie/MovieCard";
 import Footer from "@/app/components/ui/Footer";
-import PaymentSuccessNotification from "@/app/components/ui/PaymentSuccessNotification";
 import { fetchMovies, fetchNowPlayingMovies, fetchTrendingMovies, fetchTopRatedMovies } from "@/lib/tmdbapi";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -57,11 +56,6 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Payment Success Notification */}
-      <Suspense fallback={null}>
-        <PaymentSuccessNotification />
-      </Suspense>
-      
       {/* Featured Movie Section */}
       {popularMovies.length > 0 && (
         <div className="animate-fade-in-up">

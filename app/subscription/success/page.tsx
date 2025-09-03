@@ -97,18 +97,19 @@ function SuccessContent() {
           window.dispatchEvent(new Event("subscription-updated"));
         }
 
-        // If a returnTo param is present, redirect after brief delay
+        // Always redirect after processing - either to returnTo or home page
         const returnTo = searchParams.get("returnTo");
-        if (returnTo) {
-          setTimeout(() => {
-            try {
-              // Prefer client-side navigation
-              router.push(returnTo);
-            } catch (_) {
-              window.location.href = returnTo;
-            }
-          }, 1500); // Increased delay to ensure subscription is processed
-        }
+        const redirectUrl = returnTo || "/";
+        
+        setTimeout(() => {
+          try {
+            console.log("Redirecting to:", redirectUrl);
+            // Prefer client-side navigation
+            router.push(redirectUrl);
+          } catch (_) {
+            window.location.href = redirectUrl;
+          }
+        }, 3000); // Give time for all processing to complete
       } catch (err) {
         console.error("Verification error:", err);
         setError("Failed to verify payment");
