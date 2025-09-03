@@ -64,11 +64,12 @@ export const authOptions: NextAuthOptions = {
         try {
           // Check if user exists in database
           const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! }
+            where: { email: user.email! },
+            include: { accounts: true }
           });
 
           if (!existingUser) {
-            // Create user in database for Google OAuth
+            // Create new user for Google OAuth
             const newUser = await prisma.user.create({
               data: {
                 email: user.email!,
@@ -80,11 +81,31 @@ export const authOptions: NextAuthOptions = {
             });
             console.log('Created new Google OAuth user:', newUser.id);
           } else {
-            console.log('Existing Google OAuth user found:', existingUser.id);
+            // User exists - check if they already have a Google account linked
+            const googleAccount = existingUser.accounts.find(acc => acc.provider === 'google');
+            
+            if (!googleAccount) {
+              // User exists but no Google account linked - this will be handled by the adapter
+              console.log('Linking Google account to existing user:', existingUser.id);
+              
+              // Update user info with Google data if they don't have a name/image
+              if (!existingUser.name && user.name) {
+                await prisma.user.update({
+                  where: { id: existingUser.id },
+                  data: { 
+                    name: user.name,
+                    image: user.image || existingUser.image,
+                    emailVerified: existingUser.emailVerified || new Date() // Verify email if not already verified
+                  }
+                });
+              }
+            } else {
+              console.log('Existing Google OAuth user found:', existingUser.id);
+            }
           }
         } catch (error) {
-          console.error('Error creating Google OAuth user:', error);
-          return false; // Deny sign in if we can't create user
+          console.error('Error handling Google OAuth user:', error);
+          return false; // Deny sign in if we can't handle user
         }
       }
       return true;

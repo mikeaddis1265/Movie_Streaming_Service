@@ -28,8 +28,35 @@ export async function GET(request: NextRequest) {
     const totalUsers = await prisma.user.count();
     const conversionRate = totalUsers > 0 ? (activeSubscriptions / totalUsers) * 100 : 0;
 
-    // Simple stats - only conversion rate that actually works
+    // Get all required stats
+    const totalSubscriptions = await prisma.subscription.count();
+    
+    // Calculate revenue by joining with subscription plans
+    const subscriptionsWithPlans = await prisma.subscription.findMany({
+      include: {
+        user: true
+      }
+    });
+
+    // Get all subscription plans for revenue calculation
+    const subscriptionPlans = await prisma.subscriptionPlan.findMany({
+      where: { isActive: true }
+    });
+
+    // Calculate total revenue (simplified calculation)
+    let totalRevenue = 0;
+    for (const sub of subscriptionsWithPlans) {
+      const plan = subscriptionPlans.find(p => p.id === sub.planId);
+      if (plan) {
+        totalRevenue += plan.price;
+      }
+    }
+    
     const quickStats = {
+      totalUsers,
+      totalSubscriptions,
+      totalRevenue,
+      activeUsers: activeSubscriptions,
       conversionRate: Number(conversionRate.toFixed(1))
     };
 

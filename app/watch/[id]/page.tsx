@@ -111,7 +111,7 @@ export default function WatchPage({
           <h1 className="text-3xl font-bold mb-2">{movie.title}</h1>
           <div className="flex items-center justify-center gap-4 text-gray-400">
             <span>{movie.release_date?.split("-")[0] || "N/A"}</span>
-            <span>⭐ {movie.vote_average.toFixed(1)}</span>
+            <span>{movie.vote_average.toFixed(1)}</span>
           </div>
         </div>
 

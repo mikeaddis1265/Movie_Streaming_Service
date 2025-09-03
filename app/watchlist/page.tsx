@@ -261,7 +261,7 @@ export default function WatchlistPage() {
                     <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
                       <span>{movie.release_date?.split("-")[0] || "N/A"}</span>
                       <span className="flex items-center">
-                        ⭐ {movie.vote_average.toFixed(1)}
+                        {movie.vote_average.toFixed(1)}
                       </span>
                     </div>
 

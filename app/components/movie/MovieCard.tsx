@@ -59,7 +59,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
         <h3 className="movie-title-standard">{movie.title}</h3>
         <div className="movie-meta-standard">
           <span className="movie-year-standard">{movie.release_date?.split('-')[0] || 'N/A'}</span>
-          <span className="movie-rating-standard">⭐ {movie.vote_average.toFixed(1)}</span>
+          <span className="movie-rating-standard">{movie.vote_average.toFixed(1)}</span>
         </div>
       </div>
     </Link>

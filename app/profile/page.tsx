@@ -47,6 +47,17 @@ export default function ProfilePage() {
   const [watchlistMessage, setWatchlistMessage] = useState<string | null>(null);
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [profilePicMessage, setProfilePicMessage] = useState<string | null>(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -282,6 +293,59 @@ export default function ProfilePage() {
         newSet.delete(movieId);
         return newSet;
       });
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage("New passwords do not match");
+      setTimeout(() => setPasswordMessage(null), 3000);
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordMessage("New password must be at least 8 characters");
+      setTimeout(() => setPasswordMessage(null), 3000);
+      return;
+    }
+
+    setChangingPassword(true);
+    setPasswordMessage(null);
+
+    try {
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPasswordMessage("Password changed successfully!");
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+        setShowChangePassword(false);
+      } else {
+        setPasswordMessage(data.error || "Failed to change password");
+      }
+    } catch (error) {
+      console.error("Change password error:", error);
+      setPasswordMessage("An error occurred while changing password");
+    } finally {
+      setChangingPassword(false);
+      // Clear message after 5 seconds
+      setTimeout(() => setPasswordMessage(null), 5000);
     }
   };
 
@@ -540,7 +604,7 @@ export default function ProfilePage() {
                 )}
                 {profile.subscription?.status === "active" && !isAdmin && (
                   <div className="premium-badge">
-                    <span>⭐ Premium</span>
+                    <span>Premium</span>
                   </div>
                 )}
               </div>
@@ -586,6 +650,17 @@ export default function ProfilePage() {
                 Admin Dashboard
               </Link>
             )}
+            <button 
+              onClick={() => setShowChangePassword(true)}
+              className="btn-secondary"
+              style={{
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05))',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                color: '#60a5fa',
+              }}
+            >
+              Change Password
+            </button>
             {!isAdmin && (
               <Link href="/subscription" className="btn-primary">
                 {profile.subscription?.status === "active"
@@ -633,7 +708,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="movie-info">
                           <h3>{movie.title}</h3>
-                          <p>⭐ {movie.vote_average?.toFixed(1) || "N/A"}</p>
+                          <p>{movie.vote_average?.toFixed(1) || "N/A"}</p>
                         </div>
                       </Link>
                     ))}
@@ -664,7 +739,7 @@ export default function ProfilePage() {
                           </div>
                           <div className="movie-info">
                             <h3>{movie.title}</h3>
-                            <p>⭐ {movie.vote_average?.toFixed(1) || "N/A"}</p>
+                            <p>{movie.vote_average?.toFixed(1) || "N/A"}</p>
                           </div>
                         </Link>
                         <button
@@ -730,7 +805,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="movie-info">
                           <h3>{movie.title}</h3>
-                          <p>⭐ {movie.vote_average?.toFixed(1) || "N/A"}</p>
+                          <p>{movie.vote_average?.toFixed(1) || "N/A"}</p>
                           {movie.watchedAt && (
                             <p className="watched-date">
                               {new Date(movie.watchedAt).toLocaleDateString()}
@@ -770,7 +845,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="movie-info">
                           <h3>{movie.title}</h3>
-                          <p>⭐ {movie.vote_average?.toFixed(1) || "N/A"}</p>
+                          <p>{movie.vote_average?.toFixed(1) || "N/A"}</p>
                         </div>
                       </Link>
                     ))}
@@ -791,6 +866,157 @@ export default function ProfilePage() {
       {profilePicMessage && (
         <div className={`profile-toast ${profilePicMessage.includes('Failed') || profilePicMessage.includes('Please') ? 'error' : 'success'}`}>
           {profilePicMessage}
+        </div>
+      )}
+
+      {passwordMessage && (
+        <div className={`profile-toast ${passwordMessage.includes('Failed') || passwordMessage.includes('error') || passwordMessage.includes('do not match') || passwordMessage.includes('must be') ? 'error' : 'success'}`}>
+          {passwordMessage}
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="modal-overlay" onClick={() => setShowChangePassword(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Change Password</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowChangePassword(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="change-password-form">
+              <div className="input-group">
+                <label htmlFor="current-password">Current Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    required
+                    disabled={changingPassword}
+                    placeholder="Enter your current password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    disabled={changingPassword}
+                  >
+                    {showCurrentPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="new-password">New Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    required
+                    disabled={changingPassword}
+                    placeholder="Enter your new password (min 8 characters)"
+                    minLength={8}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    disabled={changingPassword}
+                  >
+                    {showNewPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="confirm-password">Confirm New Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    required
+                    disabled={changingPassword}
+                    placeholder="Confirm your new password"
+                    minLength={8}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={changingPassword}
+                  >
+                    {showConfirmPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowChangePassword(false)}
+                  disabled={changingPassword}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={changingPassword}
+                >
+                  {changingPassword ? (
+                    <>
+                      <span className="spinner"></span>
+                      Changing...
+                    </>
+                  ) : (
+                    'Change Password'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
       

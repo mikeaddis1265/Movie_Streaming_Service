@@ -55,6 +55,7 @@ interface MovieDetails {
   }>;
   userData: {
     inWatchlist: boolean;
+    inFavorites: boolean;
     userRating: number | null;
     watchProgress: number | null;
   };
@@ -71,6 +72,7 @@ function MovieDetailsContent() {
   const [error, setError] = useState<string | null>(null);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [inWatchlist, setInWatchlist] = useState(false);
+  const [inFavorites, setInFavorites] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'cast'>('overview');
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
@@ -90,6 +92,7 @@ function MovieDetailsContent() {
         setMovie(result.data);
         setUserRating(result.data.userData?.userRating);
         setInWatchlist(result.data.userData?.inWatchlist);
+        setInFavorites(result.data.userData?.inFavorites);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -102,6 +105,8 @@ function MovieDetailsContent() {
 
   const [watchlistLoading, setWatchlistLoading] = useState(false);
   const [watchlistMessage, setWatchlistMessage] = useState<string | null>(null);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [favoritesMessage, setFavoritesMessage] = useState<string | null>(null);
 
   const handleWatchlistToggle = async () => {
     if (!session?.user?.id || !movie || watchlistLoading) return;
@@ -148,6 +153,54 @@ function MovieDetailsContent() {
       setTimeout(() => setWatchlistMessage(null), 3000);
     } finally {
       setWatchlistLoading(false);
+    }
+  };
+
+  const handleFavoritesToggle = async () => {
+    if (!session?.user?.id || !movie || favoritesLoading) return;
+
+    setFavoritesLoading(true);
+    setFavoritesMessage(null);
+
+    try {
+      let response;
+      if (inFavorites) {
+        // Remove from favorites
+        response = await fetch(`/api/users/${session.user.id}/favorites/${movie.id}?mediaType=movie`, {
+          method: 'DELETE',
+        });
+      } else {
+        // Add to favorites
+        response = await fetch(`/api/users/${session.user.id}/favorites`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tmdbId: movie.id, mediaType: 'MOVIE' }),
+        });
+      }
+      
+      if (response.ok) {
+        const wasInFavorites = inFavorites;
+        setInFavorites(!inFavorites);
+        
+        // Show success message
+        if (wasInFavorites) {
+          setFavoritesMessage('Removed from favorites!');
+        } else {
+          setFavoritesMessage('Added to favorites!');
+        }
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setFavoritesMessage(null), 3000);
+      } else {
+        setFavoritesMessage('Failed to update favorites. Please try again.');
+        setTimeout(() => setFavoritesMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to update favorites:', err);
+      setFavoritesMessage('Failed to update favorites. Please try again.');
+      setTimeout(() => setFavoritesMessage(null), 3000);
+    } finally {
+      setFavoritesLoading(false);
     }
   };
 
@@ -309,7 +362,7 @@ function MovieDetailsContent() {
             
             <div className="movie-meta">
               <span className="rating">
-                ⭐ {movie.vote_average.toFixed(1)}/10
+                {movie.vote_average.toFixed(1)}/10
               </span>
               <span className="year">
                 {new Date(movie.release_date).getFullYear()}
@@ -353,6 +406,23 @@ function MovieDetailsContent() {
                     )}
                   </button>
                 )}
+                
+                {session && (
+                  <button 
+                    onClick={handleFavoritesToggle}
+                    disabled={favoritesLoading}
+                    className={`btn-favorites ${inFavorites ? 'in-favorites' : ''} ${favoritesLoading ? 'loading' : ''}`}
+                  >
+                    {favoritesLoading ? (
+                      <span className="loading-content">
+                        <span className="spinner"></span>
+                        {inFavorites ? 'Removing...' : 'Adding...'}
+                      </span>
+                    ) : (
+                      inFavorites ? '❤️ In Favorites' : '🤍 Add to Favorites'
+                    )}
+                  </button>
+                )}
               </div>
 
               {session && (
@@ -363,10 +433,10 @@ function MovieDetailsContent() {
                       {[1, 2, 3, 4, 5].map(star => (
                         <button
                           key={star}
-                          onClick={() => handleRating(star * 2)}
-                          className={`star ${(userRating && userRating >= star * 2) ? 'filled' : ''}`}
+                          onClick={() => handleRating(star)}
+                          className={`star ${(userRating && userRating >= star) ? 'filled' : ''}`}
                         >
-                          ⭐
+                          ★
                         </button>
                       ))}
                     </div>
@@ -377,6 +447,12 @@ function MovieDetailsContent() {
               {watchlistMessage && (
                 <div className={`watchlist-message ${watchlistMessage.includes('Failed') ? 'error' : 'success'}`}>
                   {watchlistMessage}
+                </div>
+              )}
+              
+              {favoritesMessage && (
+                <div className={`favorites-message ${favoritesMessage.includes('Failed') ? 'error' : 'success'}`}>
+                  {favoritesMessage}
                 </div>
               )}
             </div>
@@ -514,7 +590,7 @@ function MovieDetailsContent() {
                   />
                   <div className="rec-info">
                     <h4>{rec.title}</h4>
-                    <span className="rec-rating">⭐ {rec.vote_average.toFixed(1)}</span>
+                    <span className="rec-rating">{rec.vote_average.toFixed(1)}</span>
                   </div>
                 </Link>
               ))}

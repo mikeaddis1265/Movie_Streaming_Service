@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import "@/app/styles/pages/admin.css";
 
 interface AdminStats {
   totalUsers: number;
@@ -16,6 +17,7 @@ export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,15 +39,49 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch("/api/admin/quick-stats");
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data.data);
-      } else {
-        setError("Failed to load admin statistics");
+      // Fetch stats and users separately to avoid complete failure
+      try {
+        const statsResponse = await fetch("/api/admin/quick-stats");
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData.data);
+        } else {
+          console.error("Failed to load admin statistics:", await statsResponse.text());
+          // Set default stats if API fails
+          setStats({
+            totalUsers: 0,
+            totalSubscriptions: 0,
+            totalRevenue: 0,
+            activeUsers: 0
+          });
+        }
+      } catch (statsError) {
+        console.error("Stats fetch error:", statsError);
+        setStats({
+          totalUsers: 0,
+          totalSubscriptions: 0,
+          totalRevenue: 0,
+          activeUsers: 0
+        });
       }
+
+      try {
+        const usersResponse = await fetch("/api/admin/users");
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          setUsers(usersData.data?.users?.slice(0, 5) || []); // Show first 5 users
+        } else {
+          console.error("Failed to load users:", await usersResponse.text());
+          setUsers([]);
+        }
+      } catch (usersError) {
+        console.error("Users fetch error:", usersError);
+        setUsers([]);
+      }
+
     } catch (err) {
-      setError("Failed to load admin statistics");
+      console.error("General fetch error:", err);
+      setError("Some admin data could not be loaded");
     } finally {
       setLoading(false);
     }
@@ -53,10 +89,10 @@ export default function AdminDashboard() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="loading-spinner mb-4"></div>
-          <p className="text-white text-xl">Loading admin dashboard...</p>
+      <div className="admin-loading">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p>Loading admin dashboard...</p>
         </div>
       </div>
     );
@@ -66,165 +102,177 @@ export default function AdminDashboard() {
     return null;
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">Error</h2>
-          <p className="text-white">{error}</p>
-          <button 
-            onClick={fetchStats}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Show error as warning but still show the page content
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      <div className="container mx-auto px-6 py-8">
+    <div className="admin-page">
+      <div className="admin-container">
+        {/* Error Warning */}
+        {error && (
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            border: '1px solid rgba(239, 68, 68, 0.3)', 
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '30px',
+            color: '#ef4444',
+            textAlign: 'center'
+          }}>
+            <p>⚠️ {error}</p>
+            <button onClick={fetchStats} className="btn-primary" style={{ marginTop: '10px' }}>
+              Retry Loading Data
+            </button>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400">Welcome back, {session.user.name || session.user.email}</p>
+        <div className="admin-header">
+          <div className="admin-header-content">
+            <div className="admin-header-left">
+              <h1 className="admin-title">Admin Dashboard</h1>
+              <p className="admin-subtitle">Welcome back, <span className="admin-name">{session.user.name || session.user.email}</span></p>
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Users</p>
-                <p className="text-3xl font-bold text-white">{stats?.totalUsers || 0}</p>
-              </div>
-              <div className="bg-blue-400 bg-opacity-30 p-3 rounded-full">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
+        <div className="metrics-grid">
+          <div className="metric-card primary">
+            <div className="metric-content">
+              <span className="metric-icon">👥</span>
+              <div className="metric-label">Total Users</div>
+              <div className="metric-value">{stats?.totalUsers || 0}</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Subscriptions</p>
-                <p className="text-3xl font-bold text-white">{stats?.totalSubscriptions || 0}</p>
-              </div>
-              <div className="bg-green-400 bg-opacity-30 p-3 rounded-full">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              </div>
+          <div className="metric-card success">
+            <div className="metric-content">
+              <span className="metric-icon">📋</span>
+              <div className="metric-label">Subscriptions</div>
+              <div className="metric-value">{stats?.totalSubscriptions || 0}</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Revenue</p>
-                <p className="text-3xl font-bold text-white">${stats?.totalRevenue?.toFixed(2) || '0.00'}</p>
-              </div>
-              <div className="bg-purple-400 bg-opacity-30 p-3 rounded-full">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
+          <div className="metric-card info">
+            <div className="metric-content">
+              <span className="metric-icon">💰</span>
+              <div className="metric-label">Revenue</div>
+              <div className="metric-value">${stats?.totalRevenue?.toFixed(2) || '0.00'}</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Active Users</p>
-                <p className="text-3xl font-bold text-white">{stats?.activeUsers || 0}</p>
-              </div>
-              <div className="bg-orange-400 bg-opacity-30 p-3 rounded-full">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
+          <div className="metric-card warning">
+            <div className="metric-content">
+              <span className="metric-icon">⚡</span>
+              <div className="metric-label">Active Users</div>
+              <div className="metric-value">{stats?.activeUsers || 0}</div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gray-800 bg-opacity-50 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-xl font-bold mb-4">User Management</h3>
-            <p className="text-gray-400 mb-4">Manage users, view profiles, and update roles.</p>
-            <Link 
-              href="/admin/users"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Manage Users
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+        <div className="quick-actions-section">
+          <div className="section-title">Quick Actions</div>
+          <div className="quick-actions-grid">
+            <Link href="/admin/users" className="quick-action-card">
+              <span className="quick-action-icon">👥</span>
+              <div className="quick-action-content">
+                <h3>User Management</h3>
+                <p>Manage users, view profiles, and update roles.</p>
+              </div>
             </Link>
-          </div>
 
-          <div className="bg-gray-800 bg-opacity-50 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-xl font-bold mb-4">Subscription Plans</h3>
-            <p className="text-gray-400 mb-4">Create and manage subscription plans.</p>
-            <Link 
-              href="/admin/subscriptions"
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Manage Plans
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+            <Link href="/admin/subscriptions" className="quick-action-card">
+              <span className="quick-action-icon">💳</span>
+              <div className="quick-action-content">
+                <h3>Subscription Plans</h3>
+                <p>Create and manage subscription plans.</p>
+              </div>
             </Link>
-          </div>
 
-          <div className="bg-gray-800 bg-opacity-50 p-6 rounded-lg border border-gray-700">
-            <h3 className="text-xl font-bold mb-4">Analytics</h3>
-            <p className="text-gray-400 mb-4">View detailed analytics and reports.</p>
-            <Link 
-              href="/admin/analytics"
-              className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              View Analytics
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+            <Link href="/admin/analytics" className="quick-action-card">
+              <span className="quick-action-icon">📈</span>
+              <div className="quick-action-content">
+                <h3>Analytics</h3>
+                <p>View detailed analytics and reports.</p>
+              </div>
             </Link>
           </div>
         </div>
 
-        {/* Recent Activity Section */}
-        <div className="mt-8 bg-gray-800 bg-opacity-50 p-6 rounded-lg border border-gray-700">
-          <h3 className="text-xl font-bold mb-4">Quick Stats Overview</h3>
-          <div className="text-gray-400">
-            <p className="mb-2">✓ All systems operational</p>
-            <p className="mb-2">✓ Database connection healthy</p>
-            <p className="mb-2">✓ API endpoints responding normally</p>
-            <p>✓ Admin functionality fully operational</p>
+        {/* Recent Users */}
+        <div className="recent-users-section">
+          <div className="section-header">
+            <div className="section-title">Recent Users</div>
+            <Link href="/admin/users" className="view-all-link">
+              View All Users →
+            </Link>
           </div>
+          
+          {users.length > 0 ? (
+            <div className="users-table-container">
+              <table className="users-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="user-info">
+                          <div className="user-avatar">
+                            {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                          <div className="user-details">
+                            <div className="user-name">{user.name || 'No name'}</div>
+                            <div className="user-email">{user.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`role-badge ${user.role.toLowerCase()}`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${user.emailVerified ? 'verified' : 'unverified'}`}>
+                          {user.emailVerified ? 'Verified' : 'Unverified'}
+                        </span>
+                      </td>
+                      <td className="user-date">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td>
+                        <div className="user-actions">
+                          <Link href={`/admin/users/${user.id}`} className="action-btn view" title="View User">
+                            👁
+                          </Link>
+                          <Link href={`/admin/users/${user.id}/edit`} className="action-btn edit" title="Edit User">
+                            ✏
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon">👥</div>
+              <h3>No Users Found</h3>
+              <p>No users have registered yet.</p>
+            </div>
+          )}
         </div>
       </div>
 
-      <style jsx>{`
-        .loading-spinner {
-          width: 50px;
-          height: 50px;
-          border: 4px solid rgba(255, 255, 255, 0.1);
-          border-top: 4px solid #3b82f6;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto;
-          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

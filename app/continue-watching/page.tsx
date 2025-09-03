@@ -245,7 +245,7 @@ export default function ContinueWatchingPage() {
                       <div className="flex items-center gap-4 text-sm text-gray-400 mb-3">
                         <span>{movie.release_date?.split("-")[0] || "N/A"}</span>
                         <span className="flex items-center">
-                          ⭐ {movie.vote_average.toFixed(1)}
+                          {movie.vote_average.toFixed(1)}
                         </span>
                       </div>
 

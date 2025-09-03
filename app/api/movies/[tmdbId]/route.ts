@@ -23,6 +23,7 @@ export async function GET(
 
     // 3. Initialize variables for user-specific data
     let inWatchlist = false;
+    let inFavorites = false;
     let userRating = null;
     let watchProgress = null;
     let hasActiveSubscription = false;
@@ -68,6 +69,18 @@ export async function GET(
         }
       });
       watchProgress = history?.progress || null;
+
+      // Get favorite status
+      const favorite = await prisma.favorite.findUnique({
+        where: {
+          userId_tmdbId_mediaType: {
+            userId,
+            tmdbId: parseInt(tmdbId),
+            mediaType: MediaType.MOVIE,
+          }
+        }
+      });
+      inFavorites = !!favorite;
       
       // Check user's subscription status
       const subscription = await prisma.subscription.findUnique({
@@ -96,6 +109,7 @@ export async function GET(
       recommendations: recommendations.status === 'fulfilled' ? recommendations.value.results : [],
       userData: {
         inWatchlist,
+        inFavorites,
         userRating,
         watchProgress,
       },

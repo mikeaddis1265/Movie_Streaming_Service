@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 function AuthContent() {
@@ -13,8 +13,27 @@ function AuthContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Handle verification success/failure messages
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const verificationError = searchParams.get('error');
+    const verifiedEmail = searchParams.get('email');
+
+    if (verified === 'true') {
+      setSuccess(`Email verified successfully! You can now log in${verifiedEmail ? ` with ${verifiedEmail}` : ''}.`);
+      setIsLogin(true);
+      if (verifiedEmail) {
+        setEmail(verifiedEmail);
+      }
+    } else if (verified === 'false' && verificationError) {
+      setError(decodeURIComponent(verificationError));
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +51,7 @@ function AuthContent() {
 
         if (result?.error) {
           if (result.error === "CredentialsSignin") {
-            setError("Invalid email or password. Please check your credentials and try again.");
+            setError("Login failed. Please check your email and password. If you just registered, please verify your email first.");
           } else {
             setError("Login failed: " + result.error);
           }
@@ -55,13 +74,15 @@ function AuthContent() {
         const data = await response.json();
 
         if (response.ok) {
-          setSuccess("Registration successful! You can now login immediately.");
-          setIsLogin(true);
+          // Always require verification now
+          setSuccess("Registration successful! Please check your email to verify your account.");
+          // Show verification link for development
+          if (data.data?.verificationToken) {
+            setSuccess(data.message + ` (Dev: Click here to verify: /api/auth/verify-email?token=${data.data.verificationToken})`);
+          }
+          // Clear form data but don't switch to login mode
           setPassword("");
-          setTimeout(() => {
-            const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-            if (emailInput) emailInput.focus();
-          }, 100);
+          setName("");
         } else {
           setError(data.error || "Registration failed");
         }
@@ -79,6 +100,45 @@ function AuthContent() {
       await signIn("google", { callbackUrl: "/" });
     } catch (err) {
       setError("Google login failed");
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: forgotPasswordEmail,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess("Password reset link has been sent to your email. Please check your inbox and follow the instructions.");
+        setShowForgotPassword(false);
+        setForgotPasswordEmail("");
+      } else {
+        setError(data.error || "Failed to send password reset email.");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      console.error("Forgot password error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -247,6 +307,32 @@ function AuthContent() {
             >
               {loading ? "Please wait..." : (isLogin ? "Sign In" : "Sign Up")}
             </button>
+
+            {/* Forgot Password Link */}
+            {isLogin && (
+              <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                <button
+                  onClick={() => {
+                    setShowForgotPassword(true);
+                    setForgotPasswordEmail(email);
+                    setError("");
+                    setSuccess("");
+                  }}
+                  style={{
+                    color: '#6b7280',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                  disabled={loading}
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
           </form>
 
           {/* Toggle Form */}
@@ -325,6 +411,129 @@ function AuthContent() {
             </svg>
             Continue with Google
           </button>
+
+          {/* Forgot Password Modal */}
+          {showForgotPassword && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px'
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                padding: '32px',
+                maxWidth: '400px',
+                width: '100%',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              }}>
+                <h3 style={{
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  marginBottom: '16px',
+                  color: '#1f2937',
+                  textAlign: 'center'
+                }}>
+                  Reset Password
+                </h3>
+                <p style={{
+                  fontSize: '16px',
+                  color: '#6b7280',
+                  marginBottom: '24px',
+                  textAlign: 'center'
+                }}>
+                  Enter your email address and we'll send you a link to reset your password.
+                </p>
+
+                <form onSubmit={handleForgotPassword}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '6px'
+                    }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        fontSize: '16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        outline: 'none',
+                        transition: 'border-color 0.2s ease',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'flex-end'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordEmail("");
+                        setError("");
+                      }}
+                      style={{
+                        padding: '12px 20px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        backgroundColor: '#f3f4f6',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s ease',
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      style={{
+                        padding: '12px 20px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.6 : 1,
+                        transition: 'background-color 0.2s ease',
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? "Sending..." : "Send Reset Link"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* Back to Home */}
           <div style={{ textAlign: 'center', marginTop: '24px' }}>

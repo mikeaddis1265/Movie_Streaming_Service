@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Footer from '@/app/components/ui/Footer';
+import '@/app/styles/pages/subscription.css';
 
 interface SubscriptionPlan {
   id: string;
@@ -223,13 +224,19 @@ export default function SubscriptionPage() {
         } else {
           // Handle offline/demo subscription success
           setError(null);
-          await loadUserSubscription(); // Refresh subscription status
+          setSuccessMessage(null);
           
-          // Trigger a global refresh for navigation
+          // Immediately refresh subscription status
+          await loadUserSubscription();
+          
+          // Trigger navigation refresh for other components
           window.dispatchEvent(new Event('subscription-updated'));
           
           // Show success message
           setSuccessMessage(`Subscription activated successfully! Welcome to ${data.data?.plan || 'Premium'} - you now have access to all features.`);
+          
+          // Auto-dismiss success message after 5 seconds
+          setTimeout(() => setSuccessMessage(null), 5000);
         }
       } else {
         console.error('Checkout failed:', data);
@@ -248,6 +255,7 @@ export default function SubscriptionPage() {
     
     setSubscribing('action');
     setError(null);
+    setSuccessMessage(null);
     
     try {
       const response = await fetch(`/api/users/${session.user.id}/subscriptions`, {
@@ -257,17 +265,27 @@ export default function SubscriptionPage() {
       });
       
       if (response.ok) {
-        await loadUserSubscription(); // Refresh subscription status
+        // Immediately refresh subscription status
+        await loadUserSubscription();
+        
+        // Trigger navigation refresh for other components
+        window.dispatchEvent(new Event('subscription-updated'));
+        
+        // Show success message
         setSuccessMessage(action === 'cancel' ? 
-          'Subscription cancelled. You will have access until the end of your billing period.' : 
-          'Subscription resumed successfully!'
+          'Subscription cancelled successfully. You will have access until the end of your billing period.' : 
+          'Subscription resumed successfully! Your subscription is now active again.'
         );
+        
+        // Auto-dismiss success message after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000);
       } else {
         const data = await response.json();
         setError(data.error || `Failed to ${action} subscription.`);
       }
     } catch (err) {
-      setError(`Failed to ${action} subscription. Please try again.`);
+      console.error(`${action} subscription error:`, err);
+      setError(`Failed to ${action} subscription. Please check your connection and try again.`);
     } finally {
       setSubscribing(null);
     }
@@ -298,13 +316,19 @@ export default function SubscriptionPage() {
         } else {
           // Handle upgrade success
           setError(null);
-          await loadUserSubscription(); // Refresh subscription status
+          setSuccessMessage(null);
           
-          // Trigger a global refresh for navigation
+          // Immediately refresh subscription status
+          await loadUserSubscription();
+          
+          // Trigger navigation refresh for other components
           window.dispatchEvent(new Event('subscription-updated'));
           
           // Show success message
           setSuccessMessage(`Successfully upgraded to ${planName}! Your new plan is now active.`);
+          
+          // Auto-dismiss success message after 5 seconds
+          setTimeout(() => setSuccessMessage(null), 5000);
         }
       } else {
         console.error('Upgrade failed:', data);
@@ -329,6 +353,7 @@ export default function SubscriptionPage() {
 
     setSubscribing('delete');
     setError(null);
+    setSuccessMessage(null);
     
     try {
       const response = await fetch(`/api/users/${session.user.id}/subscriptions`, {
@@ -336,18 +361,27 @@ export default function SubscriptionPage() {
       });
       
       if (response.ok) {
-        await loadUserSubscription(); // Refresh subscription status
+        // Immediately refresh subscription status
+        await loadUserSubscription();
         
-        // Trigger a global refresh for navigation
+        // Trigger navigation refresh for other components
         window.dispatchEvent(new Event('subscription-updated'));
         
+        // Show success message
         setSuccessMessage('Subscription deleted successfully. You now have access to free features only.');
+        
+        // Auto-dismiss success message after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000);
+        
+        // Force a full page refresh to update all components
+        setTimeout(() => window.location.reload(), 2000);
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to delete subscription.');
       }
     } catch (err) {
-      setError('Failed to delete subscription. Please try again.');
+      console.error('Delete subscription error:', err);
+      setError('Failed to delete subscription. Please check your connection and try again.');
     } finally {
       setSubscribing(null);
     }
@@ -392,69 +426,90 @@ export default function SubscriptionPage() {
             Unlimited movies, TV shows, and exclusive content.<br />
             Cancel anytime, no hidden fees.
           </p>
-          
-          {/* Current Subscription Status */}
-          {userSubscription && (
-            <div className="current-subscription">
-              <div className="subscription-info">
-                <div className="subscription-plan">
-                  <span className="plan-name">{userSubscription.planName}</span>
-                  <span className={`plan-status ${userSubscription.status}`}>
-                    {userSubscription.status === 'active' ? 'Active' : 'Expired'}
-                  </span>
-                </div>
-                <p className="subscription-expires">
-                  {userSubscription.status === 'active' ? 'Renews' : 'Expired'} on {' '}
-                  {new Date(userSubscription.expiresAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </p>
-                
-                {/* Subscription Management Actions */}
-                {userSubscription.status === 'active' && !userSubscription.cancelAtPeriodEnd && (
-                  <div className="subscription-actions">
-                    <button
-                      onClick={() => setShowCancelDialog(true)}
-                      className="btn-cancel"
-                      disabled={subscribing !== null}
-                    >
-                      Cancel Subscription
-                    </button>
-                  </div>
-                )}
-                
-                {/* Cancelled but still active - show resume option */}
-                {userSubscription.status === 'active' && userSubscription.cancelAtPeriodEnd && (
-                  <div className="subscription-actions">
-                    <div className="cancel-notice">
-                      <p>Your subscription is set to cancel on {new Date(userSubscription.expiresAt).toLocaleDateString()}</p>
-                    </div>
-                    <button
-                      onClick={() => handleSubscriptionAction('resume')}
-                      className="btn-resume"
-                      disabled={subscribing !== null}
-                    >
-                      Resume Subscription
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSubscription()}
-                      className="btn-delete"
-                      disabled={subscribing !== null}
-                    >
-                      Delete Subscription
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="subscription-content">
+        {/* Current Subscription Status */}
+        {userSubscription && (
+          <div className="current-subscription-status">
+            <div className="subscription-status-card">
+              <div className="status-header">
+                <h3>Current Subscription</h3>
+                <span className={`status-badge ${userSubscription.status}`}>
+                  {userSubscription.status === 'active' ? 'Active' : 'Expired'}
+                </span>
+              </div>
+              
+              <div className="status-details">
+                <div className="plan-info">
+                  <span className="plan-name">{userSubscription.planName} Plan</span>
+                  <span className="plan-date">
+                    {userSubscription.status === 'active' ? 'Renews' : 'Expired'} on {' '}
+                    {new Date(userSubscription.expiresAt).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric', 
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span className="subscription-duration">
+                    Subscribed since {new Date(userSubscription.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+                
+                <div className="status-actions">
+                  {userSubscription.status === 'active' && !userSubscription.cancelAtPeriodEnd && (
+                    <>
+                      <button
+                        onClick={() => setShowCancelDialog(true)}
+                        className="btn-status-action cancel"
+                        disabled={subscribing !== null}
+                      >
+                        Cancel Subscription
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSubscription()}
+                        className="btn-status-action delete"
+                        disabled={subscribing !== null}
+                      >
+                        Delete Subscription
+                      </button>
+                    </>
+                  )}
+                  
+                  {userSubscription.status === 'active' && userSubscription.cancelAtPeriodEnd && (
+                    <>
+                      <div className="cancel-notice-compact">
+                        <p>⚠️ Subscription will end on {new Date(userSubscription.expiresAt).toLocaleDateString()}</p>
+                      </div>
+                      <button
+                        onClick={() => handleSubscriptionAction('resume')}
+                        className="btn-status-action resume"
+                        disabled={subscribing !== null}
+                      >
+                        Resume Subscription
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSubscription()}
+                        className="btn-status-action delete"
+                        disabled={subscribing !== null}
+                      >
+                        Delete Now
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success Message */}
         {successMessage && (
           <div className="success-message">

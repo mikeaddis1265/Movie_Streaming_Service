@@ -20,25 +20,37 @@ export async function GET(request: NextRequest) {
 
 // POST create plan
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+    
+    const body = await request.json();
+    const { name, price, currency = "USD", interval, features = [] } = body;
+    
+    if (!name || !price || !interval) {
+      return NextResponse.json(
+        { error: "name, price, interval are required" },
+        { status: 400 }
+      );
+    }
+    
+    const plan = await prisma.subscriptionPlan.create({
+      data: { name, price: parseFloat(price), currency, interval, features, isActive: true },
+    });
+    
+    return NextResponse.json({ data: plan }, { status: 201 });
+  } catch (error) {
+    console.error("Create subscription plan error:", error);
     return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
+      { error: "Failed to create subscription plan" },
+      { status: 500 }
     );
   }
-  const body = await request.json();
-  const { name, price, currency = "USD", interval, features = [] } = body;
-  if (!name || !price || !interval) {
-    return NextResponse.json(
-      { error: "name, price, interval are required" },
-      { status: 400 }
-    );
-  }
-  const plan = await prisma.subscriptionPlan.create({
-    data: { name, price, currency, interval, features, isActive: true },
-  });
-  return NextResponse.json({ data: plan }, { status: 201 });
 }
 
 // PUT update plan

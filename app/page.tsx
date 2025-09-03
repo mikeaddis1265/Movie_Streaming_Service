@@ -99,7 +99,7 @@ export default async function HomePage() {
         {popularMovies.length > 0 && (
           <section className="mb-16 animate-fade-in-up">
             <div className="mb-8">
-              <h2 className="text-4xl font-bold hover:translate-x-2 transition-transform duration-300 cursor-pointer" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>⭐ Popular Movies</h2>
+              <h2 className="text-4xl font-bold text-white">Popular Movies</h2>
             </div>
             <div className="movie-grid">
               {popularMovies.slice(1, 11).map((movie, index) => (
@@ -115,7 +115,7 @@ export default async function HomePage() {
         {topRatedMovies.length > 0 && (
           <section className="mb-16 animate-fade-in-up">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold hover:translate-x-2 transition-transform duration-300 cursor-pointer" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>🏆 Top IMDb Movies</h2>
+              <h2 className="text-4xl font-bold text-white">Top IMDb Movies</h2>
             </div>
             <div className="movie-grid">
               {topRatedMovies.slice(0, 10).map((movie, index) => (
