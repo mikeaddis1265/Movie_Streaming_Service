@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 function SuccessContent() {
   const { data: session } = useSession();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [verifying, setVerifying] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -90,6 +91,19 @@ function SuccessContent() {
         }
 
         setSuccess(true);
+
+        // If a returnTo param is present, redirect after brief delay
+        const returnTo = searchParams.get("returnTo");
+        if (returnTo) {
+          setTimeout(() => {
+            try {
+              // Prefer client-side navigation
+              router.push(returnTo);
+            } catch (_) {
+              window.location.href = returnTo;
+            }
+          }, 800);
+        }
       } catch (err) {
         console.error("Verification error:", err);
         setError("Failed to verify payment");

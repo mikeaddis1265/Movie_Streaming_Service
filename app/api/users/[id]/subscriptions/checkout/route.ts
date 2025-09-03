@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Parse request body
     const body = await request.json();
-    const { planId, paymentProvider, isUpgrade } = body;
+    const { planId, paymentProvider, isUpgrade, returnTo } = body;
 
     if (!planId) {
       return NextResponse.json(
@@ -48,30 +48,50 @@ export async function POST(request: NextRequest) {
     // If plan doesn't exist in database, create it based on the planId
     if (!plan) {
       const defaultPlans = {
-        '1': {
-          name: 'Basic',
+        "1": {
+          name: "Basic",
           price: 9.99,
-          currency: 'USD',
-          interval: 'month',
-          features: ['HD Quality', '2 Devices', 'Mobile & Tablet Access', 'Basic Movie Library'],
-          isActive: true
+          currency: "USD",
+          interval: "month",
+          features: [
+            "HD Quality",
+            "2 Devices",
+            "Mobile & Tablet Access",
+            "Basic Movie Library",
+          ],
+          isActive: true,
         },
-        '2': {
-          name: 'Premium', 
+        "2": {
+          name: "Premium",
           price: 15.99,
-          currency: 'USD',
-          interval: 'month',
-          features: ['4K Ultra HD', '4 Devices', 'All Device Access', 'Full Movie Library', 'Early Access', 'No Ads'],
-          isActive: true
+          currency: "USD",
+          interval: "month",
+          features: [
+            "4K Ultra HD",
+            "4 Devices",
+            "All Device Access",
+            "Full Movie Library",
+            "Early Access",
+            "No Ads",
+          ],
+          isActive: true,
         },
-        '3': {
-          name: 'Family',
+        "3": {
+          name: "Family",
           price: 19.99,
-          currency: 'USD', 
-          interval: 'month',
-          features: ['4K Ultra HD', '6 Devices', 'All Device Access', 'Full Movie Library', 'Family Profiles', 'Parental Controls', 'No Ads'],
-          isActive: true
-        }
+          currency: "USD",
+          interval: "month",
+          features: [
+            "4K Ultra HD",
+            "6 Devices",
+            "All Device Access",
+            "Full Movie Library",
+            "Family Profiles",
+            "Parental Controls",
+            "No Ads",
+          ],
+          isActive: true,
+        },
       };
 
       const defaultPlan = defaultPlans[planId as keyof typeof defaultPlans];
@@ -87,11 +107,11 @@ export async function POST(request: NextRequest) {
         plan = await prisma.subscriptionPlan.create({
           data: {
             id: planId,
-            ...defaultPlan
-          }
+            ...defaultPlan,
+          },
         });
       } catch (planError) {
-        console.error('Failed to create plan:', planError);
+        console.error("Failed to create plan:", planError);
         return NextResponse.json(
           { error: "Failed to create subscription plan" },
           { status: 500 }
@@ -108,9 +128,12 @@ export async function POST(request: NextRequest) {
           currency: plan.currency,
           email: session.user.email || "user@example.com",
           tx_ref: txRef,
-          callback_url: "https://movie-streaming-service-theta.vercel.app/api/webhooks/chapa",
-          // Ensure tx_ref is present on return URL even if provider doesn't append it
-          return_url: `https://movie-streaming-service-theta.vercel.app/subscription/success?tx_ref=${encodeURIComponent(txRef)}`,
+          callback_url:
+            "https://movie-streaming-service-theta.vercel.app/api/webhooks/chapa",
+          // Ensure tx_ref is present on return URL even if provider doesn't append it; pass through returnTo if provided
+          return_url: `https://movie-streaming-service-theta.vercel.app/subscription/success?tx_ref=${encodeURIComponent(
+            txRef
+          )}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`,
           meta: {
             userId: session.user.id,
             planId: plan.id,
@@ -118,7 +141,10 @@ export async function POST(request: NextRequest) {
         });
 
         // If we get a real checkout URL, use it
-        if (init?.data?.checkout_url && !init.data.checkout_url.includes('success=demo')) {
+        if (
+          init?.data?.checkout_url &&
+          !init.data.checkout_url.includes("success=demo")
+        ) {
           return NextResponse.json(
             {
               data: {
@@ -132,7 +158,7 @@ export async function POST(request: NextRequest) {
         }
         // Otherwise fall through to offline mode
       } catch (error) {
-        console.warn('Chapa payment failed, using offline mode:', error);
+        console.warn("Chapa payment failed, using offline mode:", error);
         // Continue to offline mode below
       }
     }
@@ -149,22 +175,36 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Create or update subscription in database
-    console.log(isUpgrade ? 'Upgrading subscription' : 'Creating subscription', 'for user:', session.user.id, 'with plan:', plan.id);
-    
+    console.log(
+      isUpgrade ? "Upgrading subscription" : "Creating subscription",
+      "for user:",
+      session.user.id,
+      "with plan:",
+      plan.id
+    );
+
     let subscription;
     try {
       // If it's an upgrade, preserve the current period dates for pro-rating logic
-      const existingSubscription = isUpgrade ? await prisma.subscription.findUnique({
-        where: { userId: session.user.id }
-      }) : null;
+      const existingSubscription = isUpgrade
+        ? await prisma.subscription.findUnique({
+            where: { userId: session.user.id },
+          })
+        : null;
 
       subscription = await prisma.subscription.upsert({
         where: { userId: session.user.id },
         update: {
           planId: plan.id,
           status: "ACTIVE",
-          currentPeriodStart: isUpgrade && existingSubscription ? existingSubscription.currentPeriodStart : currentDate,
-          currentPeriodEnd: isUpgrade && existingSubscription ? existingSubscription.currentPeriodEnd : endDate,
+          currentPeriodStart:
+            isUpgrade && existingSubscription
+              ? existingSubscription.currentPeriodStart
+              : currentDate,
+          currentPeriodEnd:
+            isUpgrade && existingSubscription
+              ? existingSubscription.currentPeriodEnd
+              : endDate,
           cancelAtPeriodEnd: false,
         },
         create: {
@@ -176,13 +216,19 @@ export async function POST(request: NextRequest) {
           cancelAtPeriodEnd: false,
         },
       });
-      console.log('Subscription created/updated successfully:', subscription.id);
+      console.log(
+        "Subscription created/updated successfully:",
+        subscription.id
+      );
     } catch (subscriptionError) {
-      console.error('Subscription database error:', subscriptionError);
+      console.error("Subscription database error:", subscriptionError);
       return NextResponse.json(
-        { 
+        {
           error: "Failed to create subscription in database",
-          details: subscriptionError instanceof Error ? subscriptionError.message : 'Unknown error'
+          details:
+            subscriptionError instanceof Error
+              ? subscriptionError.message
+              : "Unknown error",
         },
         { status: 500 }
       );
@@ -191,7 +237,9 @@ export async function POST(request: NextRequest) {
     // 7. Return success response
     return NextResponse.json(
       {
-        message: isUpgrade ? "Subscription upgraded successfully (offline mode)" : "Subscription created successfully (offline mode)",
+        message: isUpgrade
+          ? "Subscription upgraded successfully (offline mode)"
+          : "Subscription created successfully (offline mode)",
         data: {
           subscriptionId: subscription.id,
           plan: plan.name,
