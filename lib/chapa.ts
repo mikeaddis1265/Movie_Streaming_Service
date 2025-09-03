@@ -12,6 +12,7 @@ interface InitializePayload {
   callback_url?: string;
   return_url?: string;
   custom_fields?: Record<string, string>;
+  meta?: Record<string, string>;
 }
 
 export async function chapaInitialize(payload: InitializePayload) {
