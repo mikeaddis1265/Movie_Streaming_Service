@@ -118,10 +118,6 @@ export async function GET(
           take: 5,
           orderBy: { createdAt: "desc" },
         },
-        reviews: {
-          take: 5,
-          orderBy: { createdAt: "desc" },
-        },
         subscription: true,
       },
     });
