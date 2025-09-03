@@ -55,22 +55,24 @@ export async function GET(req: Request) {
 
     const result = await verify(token);
 
-    // Redirect to auth page with success message for GET requests
-    return NextResponse.redirect(
-      new URL(
-        "https://movie-streaming-service-theta.vercel.app//auth?verified=true&email=" +
-          encodeURIComponent(result.email),
-        req.url
-      )
+    // Fixed redirect URL - removed the extra slash
+    const baseUrl = "https://movie-streaming-service-theta.vercel.app";
+    const redirectUrl = new URL(
+      `${baseUrl}/auth?verified=true&email=${encodeURIComponent(result.email)}`,
+      req.url
     );
+
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
-    return NextResponse.redirect(
-      new URL(
-        "https://movie-streaming-service-theta.vercel.app//auth?verified=false&error=" +
-          encodeURIComponent("Verification failed"),
-        req.url
-      )
+    // Fixed error redirect URL as well
+    const baseUrl = "https://movie-streaming-service-theta.vercel.app";
+    const errorMessage = error instanceof AppError ? error.message : "Verification failed";
+    const redirectUrl = new URL(
+      `${baseUrl}/auth?verified=false&error=${encodeURIComponent(errorMessage)}`,
+      req.url
     );
+
+    return NextResponse.redirect(redirectUrl);
   }
 }
 
@@ -88,7 +90,6 @@ export async function POST(req: Request) {
 
     const result = await verify(token);
 
-    // Return JSON response for POST requests
     return NextResponse.json({
       data: result,
       message: result.message,
