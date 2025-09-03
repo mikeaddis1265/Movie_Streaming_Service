@@ -55,22 +55,41 @@ export async function POST(request: NextRequest) {
 
 // PUT update plan
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+    const body = await request.json();
+    const { id, ...updates } = body;
+    if (!id)
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    
+    const plan = await prisma.subscriptionPlan.update({
+      where: { id },
+      data: updates,
+    });
+    
+    return NextResponse.json({ data: plan });
+  } catch (error) {
+    console.error("Update subscription plan error:", error);
+    
+    // Type guard to check if error has a code property
+    if (error && typeof error === 'object' && 'code' in error && error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Subscription plan not found" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
+      { error: "Failed to update subscription plan" },
+      { status: 500 }
     );
   }
-  const body = await request.json();
-  const { id, ...updates } = body;
-  if (!id)
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
-  const plan = await prisma.subscriptionPlan.update({
-    where: { id },
-    data: updates,
-  });
-  return NextResponse.json({ data: plan });
 }
 
 // DELETE archive plan
@@ -83,32 +102,31 @@ export async function DELETE(request: NextRequest) {
         { status: 403 }
       );
     }
-
+    
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-
-    if (!id) {
+    if (!id)
       return NextResponse.json({ error: "id is required" }, { status: 400 });
-    }
-
+    
     const plan = await prisma.subscriptionPlan.update({
       where: { id },
       data: { isActive: false },
     });
-
+    
     return NextResponse.json({ data: plan });
   } catch (error) {
     console.error("Admin subscription plan DELETE error:", error);
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    
+    // Type guard to check if error has a code property
+    if (error && typeof error === 'object' && 'code' in error && error.code === "P2025") {
       return NextResponse.json(
         { error: "Subscription plan not found" },
         { status: 404 }
       );
     }
-
+    
     return NextResponse.json(
-      { error: "Failed to delete subscription plan" },
+      { error: "Failed to archive subscription plan" },
       { status: 500 }
     );
   }
