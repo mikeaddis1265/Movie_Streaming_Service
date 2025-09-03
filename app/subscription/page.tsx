@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Footer from "@/app/components/ui/Footer";
@@ -29,7 +28,6 @@ interface UserSubscription {
 
 export default function SubscriptionPage() {
   const { data: session } = useSession();
-  const searchParams = useSearchParams();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [userSubscription, setUserSubscription] =
     useState<UserSubscription | null>(null);
@@ -222,7 +220,11 @@ export default function SubscriptionPage() {
           body: JSON.stringify({
             planId,
             // Pass through returnTo if present so we can redirect back after payment
-            returnTo: searchParams.get("returnTo") || undefined,
+            returnTo:
+              typeof window !== "undefined"
+                ? new URL(window.location.href).searchParams.get("returnTo") ||
+                  undefined
+                : undefined,
           }),
         }
       );
@@ -345,7 +347,11 @@ export default function SubscriptionPage() {
           body: JSON.stringify({
             planId,
             isUpgrade: true,
-            returnTo: searchParams.get("returnTo") || undefined,
+            returnTo:
+              typeof window !== "undefined"
+                ? new URL(window.location.href).searchParams.get("returnTo") ||
+                  undefined
+                : undefined,
           }),
         }
       );
