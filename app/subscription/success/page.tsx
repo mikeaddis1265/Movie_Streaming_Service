@@ -32,8 +32,28 @@ function SuccessContent() {
           return;
         }
 
-        // Payment was successful, load user subscription
+        // Payment was successful, manually process it since webhook isn't working
         if (session?.user?.id) {
+          console.log('Processing payment manually for tx_ref:', txRef);
+          
+          // Call our webhook manually to process the payment
+          try {
+            const webhookResponse = await fetch('/api/webhooks/chapa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tx_ref: txRef })
+            });
+            
+            if (webhookResponse.ok) {
+              console.log('Payment processed successfully');
+            } else {
+              console.error('Webhook processing failed:', await webhookResponse.text());
+            }
+          } catch (webhookError) {
+            console.error('Error calling webhook:', webhookError);
+          }
+
+          // Load user subscription
           const response = await fetch(`/api/users/${session.user.id}/subscriptions`);
           if (response.ok) {
             const data = await response.json();
