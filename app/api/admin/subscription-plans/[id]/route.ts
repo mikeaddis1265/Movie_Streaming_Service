@@ -6,10 +6,10 @@ import { authOptions } from "@/lib/auth";
 // Type guard to check if error has a code property
 function isPrismaError(error: unknown): error is { code: string; meta?: any } {
   return (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'code' in error &&
-    typeof (error as any).code === 'string'
+    "code" in error &&
+    typeof (error as any).code === "string"
   );
 }
 
@@ -46,21 +46,28 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    
+
     const body = await request.json();
     const { name, price, currency = "USD", interval, features = [] } = body;
-    
+
     if (!name || !price || !interval) {
       return NextResponse.json(
         { error: "name, price, interval are required" },
         { status: 400 }
       );
     }
-    
+
     const plan = await prisma.subscriptionPlan.create({
-      data: { name, price: parseFloat(price), currency, interval, features, isActive: true },
+      data: {
+        name,
+        price: parseFloat(price),
+        currency,
+        interval,
+        features,
+        isActive: true,
+      },
     });
-    
+
     return NextResponse.json({ data: plan }, { status: 201 });
   } catch (error) {
     console.error("Create subscription plan error:", error);
@@ -84,31 +91,31 @@ export async function PUT(
         { status: 403 }
       );
     }
-    
+
     const { id } = params;
     const body = await request.json();
     const { ...updates } = body;
-    
+
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
-    
+
     const plan = await prisma.subscriptionPlan.update({
       where: { id },
       data: updates,
     });
-    
+
     return NextResponse.json({ data: plan });
   } catch (error) {
     console.error("Update subscription plan error:", error);
-    
+
     if (isPrismaError(error) && error.code === "P2025") {
       return NextResponse.json(
         { error: "Subscription plan not found" },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Failed to update subscription plan" },
       { status: 500 }
@@ -129,28 +136,28 @@ export async function DELETE(
         { status: 403 }
       );
     }
-    
+
     const { id } = params;
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
-    
+
     const plan = await prisma.subscriptionPlan.update({
       where: { id },
       data: { isActive: false },
     });
-    
+
     return NextResponse.json({ data: plan });
   } catch (error) {
     console.error("Admin subscription plan DELETE error:", error);
-    
+
     if (isPrismaError(error) && error.code === "P2025") {
       return NextResponse.json(
         { error: "Subscription plan not found" },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Failed to archive subscription plan" },
       { status: 500 }
