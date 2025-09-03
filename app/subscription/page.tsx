@@ -266,6 +266,9 @@ export default function SubscriptionPage() {
 
           // Auto-dismiss success message after 5 seconds
           setTimeout(() => setSuccessMessage(null), 5000);
+
+          // Force a full page refresh to update all components
+          setTimeout(() => window.location.reload(), 2000);
         }
       } else {
         console.error("Checkout failed:", data);
@@ -390,6 +393,9 @@ export default function SubscriptionPage() {
 
           // Auto-dismiss success message after 5 seconds
           setTimeout(() => setSuccessMessage(null), 5000);
+
+          // Force a full page refresh to update all components
+          setTimeout(() => window.location.reload(), 2000);
         }
       } else {
         console.error("Upgrade failed:", data);

@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import Footer from '@/app/components/ui/Footer';
+import { useEffect, useState, Suspense } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
+import Footer from "@/app/components/ui/Footer";
 import ModernVideoPlayer from "@/app/components/movie/ModernVideoplayer";
-
 
 interface MovieDetails {
   id: number;
@@ -73,7 +72,7 @@ function MovieDetailsContent() {
   const [userRating, setUserRating] = useState<number | null>(null);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [inFavorites, setInFavorites] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'cast'>('overview');
+  const [activeTab, setActiveTab] = useState<"overview" | "cast">("overview");
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
   const movieId = params?.id as string;
@@ -86,7 +85,7 @@ function MovieDetailsContent() {
         setLoading(true);
         const response = await fetch(`/api/movies/${movieId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch movie details');
+          throw new Error("Failed to fetch movie details");
         }
         const result = await response.json();
         setMovie(result.data);
@@ -94,7 +93,7 @@ function MovieDetailsContent() {
         setInWatchlist(result.data.userData?.inWatchlist);
         setInFavorites(result.data.userData?.inFavorites);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -107,11 +106,11 @@ function MovieDetailsContent() {
   useEffect(() => {
     const handleSubscriptionUpdate = () => {
       if (!movieId) return;
-      
+
       // Refetch movie details to get updated subscription status
       fetch(`/api/movies/${movieId}`)
-        .then(response => response.json())
-        .then(result => {
+        .then((response) => response.json())
+        .then((result) => {
           if (result.data) {
             setMovie(result.data);
             setUserRating(result.data.userData?.userRating);
@@ -119,14 +118,20 @@ function MovieDetailsContent() {
             setInFavorites(result.data.userData?.inFavorites);
           }
         })
-        .catch(error => {
-          console.error('Failed to refresh movie data after subscription update:', error);
+        .catch((error) => {
+          console.error(
+            "Failed to refresh movie data after subscription update:",
+            error
+          );
         });
     };
 
-    window.addEventListener('subscription-updated', handleSubscriptionUpdate);
+    window.addEventListener("subscription-updated", handleSubscriptionUpdate);
     return () => {
-      window.removeEventListener('subscription-updated', handleSubscriptionUpdate);
+      window.removeEventListener(
+        "subscription-updated",
+        handleSubscriptionUpdate
+      );
     };
   }, [movieId]);
 
@@ -145,38 +150,41 @@ function MovieDetailsContent() {
       let response;
       if (inWatchlist) {
         // Remove from watchlist
-        response = await fetch(`/api/users/${session.user.id}/watchlist/${movie.id}?mediaType=movie`, {
-          method: 'DELETE',
-        });
+        response = await fetch(
+          `/api/users/${session.user.id}/watchlist/${movie.id}?mediaType=movie`,
+          {
+            method: "DELETE",
+          }
+        );
       } else {
         // Add to watchlist
         response = await fetch(`/api/users/${session.user.id}/watchlist`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tmdbId: movie.id, mediaType: 'MOVIE' }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tmdbId: movie.id, mediaType: "MOVIE" }),
         });
       }
-      
+
       if (response.ok) {
         const wasInWatchlist = inWatchlist;
         setInWatchlist(!inWatchlist);
-        
+
         // Show success message
         if (wasInWatchlist) {
-          setWatchlistMessage('Removed from watchlist!');
+          setWatchlistMessage("Removed from watchlist!");
         } else {
-          setWatchlistMessage('Added to watchlist!');
+          setWatchlistMessage("Added to watchlist!");
         }
-        
+
         // Clear message after 3 seconds
         setTimeout(() => setWatchlistMessage(null), 3000);
       } else {
-        setWatchlistMessage('Failed to update watchlist. Please try again.');
+        setWatchlistMessage("Failed to update watchlist. Please try again.");
         setTimeout(() => setWatchlistMessage(null), 3000);
       }
     } catch (err) {
-      console.error('Failed to update watchlist:', err);
-      setWatchlistMessage('Failed to update watchlist. Please try again.');
+      console.error("Failed to update watchlist:", err);
+      setWatchlistMessage("Failed to update watchlist. Please try again.");
       setTimeout(() => setWatchlistMessage(null), 3000);
     } finally {
       setWatchlistLoading(false);
@@ -193,38 +201,41 @@ function MovieDetailsContent() {
       let response;
       if (inFavorites) {
         // Remove from favorites
-        response = await fetch(`/api/users/${session.user.id}/favorites/${movie.id}?mediaType=movie`, {
-          method: 'DELETE',
-        });
+        response = await fetch(
+          `/api/users/${session.user.id}/favorites/${movie.id}?mediaType=movie`,
+          {
+            method: "DELETE",
+          }
+        );
       } else {
         // Add to favorites
         response = await fetch(`/api/users/${session.user.id}/favorites`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tmdbId: movie.id, mediaType: 'MOVIE' }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tmdbId: movie.id, mediaType: "MOVIE" }),
         });
       }
-      
+
       if (response.ok) {
         const wasInFavorites = inFavorites;
         setInFavorites(!inFavorites);
-        
+
         // Show success message
         if (wasInFavorites) {
-          setFavoritesMessage('Removed from favorites!');
+          setFavoritesMessage("Removed from favorites!");
         } else {
-          setFavoritesMessage('Added to favorites!');
+          setFavoritesMessage("Added to favorites!");
         }
-        
+
         // Clear message after 3 seconds
         setTimeout(() => setFavoritesMessage(null), 3000);
       } else {
-        setFavoritesMessage('Failed to update favorites. Please try again.');
+        setFavoritesMessage("Failed to update favorites. Please try again.");
         setTimeout(() => setFavoritesMessage(null), 3000);
       }
     } catch (err) {
-      console.error('Failed to update favorites:', err);
-      setFavoritesMessage('Failed to update favorites. Please try again.');
+      console.error("Failed to update favorites:", err);
+      setFavoritesMessage("Failed to update favorites. Please try again.");
       setTimeout(() => setFavoritesMessage(null), 3000);
     } finally {
       setFavoritesLoading(false);
@@ -236,16 +247,16 @@ function MovieDetailsContent() {
 
     try {
       const response = await fetch(`/api/movies/${movie.id}/rating`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value: rating, mediaType: 'MOVIE' }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: rating, mediaType: "MOVIE" }),
       });
-      
+
       if (response.ok) {
         setUserRating(rating);
       }
     } catch (err) {
-      console.error('Failed to rate movie:', err);
+      console.error("Failed to rate movie:", err);
     }
   };
 
@@ -256,14 +267,17 @@ function MovieDetailsContent() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
   const getDirector = () => {
-    return movie?.credits?.crew?.find(member => member.job === 'Director')?.name || 'Unknown';
+    return (
+      movie?.credits?.crew?.find((member) => member.job === "Director")?.name ||
+      "Unknown"
+    );
   };
 
   const handleProgress = async (progress: {
@@ -291,7 +305,7 @@ function MovieDetailsContent() {
     // Check if movie requires subscription and user doesn't have one
     if (movie?.requiresSubscription && !movie?.canWatch) {
       // Redirect to subscription page
-      router.push('/subscription');
+      router.push("/subscription");
       return;
     }
 
@@ -299,41 +313,41 @@ function MovieDetailsContent() {
     if (session?.user?.id && movie) {
       try {
         await fetch(`/api/users/${session.user.id}/viewing-history`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             tmdbId: movie.id,
-            mediaType: 'MOVIE',
-            progress: 0
+            mediaType: "MOVIE",
+            progress: 0,
           }),
         });
-        console.log('Added to viewing history');
+        console.log("Added to viewing history");
       } catch (error) {
-        console.error('Failed to add to viewing history:', error);
+        console.error("Failed to add to viewing history:", error);
       }
     }
-    
+
     setShowVideoPlayer(true);
     // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const handleClosePlayer = () => {
     setShowVideoPlayer(false);
     // Restore body scrolling
-    document.body.style.overflow = 'unset';
+    document.body.style.overflow = "unset";
   };
 
   // Close modal on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showVideoPlayer) {
+      if (e.key === "Escape" && showVideoPlayer) {
         handleClosePlayer();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [showVideoPlayer]);
 
   if (loading) {
@@ -349,7 +363,7 @@ function MovieDetailsContent() {
     return (
       <div className="movie-details-error">
         <h2>Error Loading Movie</h2>
-        <p>{error || 'Movie not found'}</p>
+        <p>{error || "Movie not found"}</p>
         <button onClick={() => router.back()} className="btn-primary">
           Go Back
         </button>
@@ -371,7 +385,7 @@ function MovieDetailsContent() {
           />
           <div className="hero-overlay"></div>
         </div>
-        
+
         <div className="movie-hero-content">
           <div className="hero-poster">
             <Image
@@ -382,71 +396,81 @@ function MovieDetailsContent() {
               className="poster-image"
             />
           </div>
-          
+
           <div className="hero-info">
             <h1 className="movie-title">{movie.title}</h1>
             {movie.tagline && <p className="movie-tagline">{movie.tagline}</p>}
-            
+
             <div className="movie-meta">
-              <span className="rating">
-                {movie.vote_average.toFixed(1)}/10
-              </span>
+              <span className="rating">{movie.vote_average.toFixed(1)}/10</span>
               <span className="year">
                 {new Date(movie.release_date).getFullYear()}
               </span>
-              <span className="runtime">
-                {formatRuntime(movie.runtime)}
-              </span>
+              <span className="runtime">{formatRuntime(movie.runtime)}</span>
               <span className="status">{movie.status}</span>
             </div>
-            
+
             <div className="movie-genres">
-              {movie.genres.map(genre => (
+              {movie.genres.map((genre) => (
                 <span key={genre.id} className="genre-tag">
                   {genre.name}
                 </span>
               ))}
             </div>
-            
+
             <div className="action-buttons">
               <div className="primary-actions">
-                <button onClick={handlePlayMovie} className={`btn-play ${movie?.requiresSubscription && !movie?.canWatch ? 'subscription-required' : ''}`}>
-                  {movie?.requiresSubscription && !movie?.canWatch 
-                    ? '👑 Subscribe to Watch' 
-                    : '▶ Play Movie'
-                  }
+                <button
+                  onClick={handlePlayMovie}
+                  className={`btn-play ${
+                    movie?.requiresSubscription && !movie?.canWatch
+                      ? "subscription-required"
+                      : ""
+                  }`}
+                >
+                  {movie?.requiresSubscription && !movie?.canWatch
+                    ? "👑 Subscribe to Watch"
+                    : "▶ Watch Now"}
                 </button>
-                
+
                 {session && (
-                  <button 
+                  <button
                     onClick={handleWatchlistToggle}
                     disabled={watchlistLoading}
-                    className={`btn-watchlist ${inWatchlist ? 'in-watchlist' : ''} ${watchlistLoading ? 'loading' : ''}`}
+                    className={`btn-watchlist ${
+                      inWatchlist ? "in-watchlist" : ""
+                    } ${watchlistLoading ? "loading" : ""}`}
                   >
                     {watchlistLoading ? (
                       <span className="loading-content">
                         <span className="spinner"></span>
-                        {inWatchlist ? 'Removing...' : 'Adding...'}
+                        {inWatchlist ? "Removing..." : "Adding..."}
                       </span>
+                    ) : inWatchlist ? (
+                      "✓ In Watchlist"
                     ) : (
-                      inWatchlist ? '✓ In Watchlist' : '+ Add to Watchlist'
+                      "+ Add to Watchlist"
                     )}
                   </button>
                 )}
-                
+
                 {session && (
-                  <button 
+                  <button
                     onClick={handleFavoritesToggle}
                     disabled={favoritesLoading}
-                    className={`btn-favorites ${inFavorites ? 'in-favorites' : ''} ${favoritesLoading ? 'loading' : ''}`}
+                    className={`btn-favorites ${
+                      inFavorites ? "in-favorites" : ""
+                    } ${favoritesLoading ? "loading" : ""}`}
                   >
                     {favoritesLoading ? (
                       <span className="loading-content">
                         <span className="spinner"></span>
-                        {inFavorites ? 'Removing...' : 'Adding...'}
+                        {inFavorites ? "Removing..." : "Adding..."}
                       </span>
+                    ) : inFavorites ? (
+                      "❤️ In Favorites"
                     ) : (
-                      inFavorites ? '❤️ In Favorites' : '🤍 Add to Favorites'
+                      "🤍 Add to Favorites"
                     )}
                   </button>
                 )}
@@ -457,11 +481,13 @@ function MovieDetailsContent() {
                   <div className="rating-section">
                     <span>Rate this movie:</span>
                     <div className="star-rating">
-                      {[1, 2, 3, 4, 5].map(star => (
+                      {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           onClick={() => handleRating(star)}
-                          className={`star ${(userRating && userRating >= star) ? 'filled' : ''}`}
+                          className={`star ${
+                            userRating && userRating >= star ? "filled" : ""
+                          }`}
                         >
                           ★
                         </button>
@@ -470,15 +496,23 @@ function MovieDetailsContent() {
                   </div>
                 </div>
               )}
-              
+
               {watchlistMessage && (
-                <div className={`watchlist-message ${watchlistMessage.includes('Failed') ? 'error' : 'success'}`}>
+                <div
+                  className={`watchlist-message ${
+                    watchlistMessage.includes("Failed") ? "error" : "success"
+                  }`}
+                >
                   {watchlistMessage}
                 </div>
               )}
-              
+
               {favoritesMessage && (
-                <div className={`favorites-message ${favoritesMessage.includes('Failed') ? 'error' : 'success'}`}>
+                <div
+                  className={`favorites-message ${
+                    favoritesMessage.includes("Failed") ? "error" : "success"
+                  }`}
+                >
                   {favoritesMessage}
                 </div>
               )}
@@ -490,7 +524,10 @@ function MovieDetailsContent() {
       {/* Full-Screen Video Player Modal */}
       {showVideoPlayer && (
         <div className="video-modal-overlay" onClick={handleClosePlayer}>
-          <div className="video-modal-container" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="video-modal-container"
+            onClick={(e) => e.stopPropagation()}
+          >
             <ModernVideoPlayer
               videoUrl={`/videos/${movie.id}.mp4`}
               movieId={movie.id.toString()}
@@ -503,28 +540,28 @@ function MovieDetailsContent() {
       {/* Content Tabs */}
       <div className="movie-content">
         <div className="content-tabs">
-          <button 
-            className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+          <button
+            className={`tab ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
           >
             Overview
           </button>
-          <button 
-            className={`tab ${activeTab === 'cast' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cast')}
+          <button
+            className={`tab ${activeTab === "cast" ? "active" : ""}`}
+            onClick={() => setActiveTab("cast")}
           >
             Cast & Crew
           </button>
         </div>
 
         {/* Overview Tab */}
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <div className="tab-content overview-tab">
             <div className="overview-grid">
               <div className="overview-main">
                 <h3>Synopsis</h3>
                 <p className="movie-overview">{movie.overview}</p>
-                
+
                 <div className="movie-details-grid">
                   <div className="detail-item">
                     <h4>Director</h4>
@@ -536,11 +573,19 @@ function MovieDetailsContent() {
                   </div>
                   <div className="detail-item">
                     <h4>Budget</h4>
-                    <p>{movie.budget > 0 ? formatCurrency(movie.budget) : 'Unknown'}</p>
+                    <p>
+                      {movie.budget > 0
+                        ? formatCurrency(movie.budget)
+                        : "Unknown"}
+                    </p>
                   </div>
                   <div className="detail-item">
                     <h4>Revenue</h4>
-                    <p>{movie.revenue > 0 ? formatCurrency(movie.revenue) : 'Unknown'}</p>
+                    <p>
+                      {movie.revenue > 0
+                        ? formatCurrency(movie.revenue)
+                        : "Unknown"}
+                    </p>
                   </div>
                 </div>
 
@@ -548,7 +593,7 @@ function MovieDetailsContent() {
                   <div className="production-companies">
                     <h4>Production Companies</h4>
                     <div className="companies-grid">
-                      {movie.production_companies.slice(0, 4).map(company => (
+                      {movie.production_companies.slice(0, 4).map((company) => (
                         <div key={company.id} className="company-item">
                           {company.logo_path && (
                             <Image
@@ -571,11 +616,11 @@ function MovieDetailsContent() {
         )}
 
         {/* Cast Tab */}
-        {activeTab === 'cast' && (
+        {activeTab === "cast" && (
           <div className="tab-content cast-tab">
             <h3>Cast</h3>
             <div className="cast-grid">
-              {movie.credits?.cast?.slice(0, 12).map(member => (
+              {movie.credits?.cast?.slice(0, 12).map((member) => (
                 <div key={member.id} className="cast-card">
                   <div className="cast-image">
                     {member.profile_path ? (
@@ -600,14 +645,17 @@ function MovieDetailsContent() {
           </div>
         )}
 
-
         {/* Recommendations Section */}
         {movie.recommendations.length > 0 && (
           <div className="recommendations-section">
             <h3>You Might Also Like</h3>
             <div className="recommendations-grid">
-              {movie.recommendations.slice(0, 6).map(rec => (
-                <Link key={rec.id} href={`/details/${rec.id}`} className="recommendation-card">
+              {movie.recommendations.slice(0, 6).map((rec) => (
+                <Link
+                  key={rec.id}
+                  href={`/details/${rec.id}`}
+                  className="recommendation-card"
+                >
                   <Image
                     src={`https://image.tmdb.org/t/p/w300${rec.poster_path}`}
                     alt={rec.title}
@@ -617,7 +665,9 @@ function MovieDetailsContent() {
                   />
                   <div className="rec-info">
                     <h4>{rec.title}</h4>
-                    <span className="rec-rating">{rec.vote_average.toFixed(1)}</span>
+                    <span className="rec-rating">
+                      {rec.vote_average.toFixed(1)}
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -625,7 +675,7 @@ function MovieDetailsContent() {
           </div>
         )}
       </div>
-      
+
       <Footer />
     </div>
   );
@@ -633,28 +683,30 @@ function MovieDetailsContent() {
 
 export default function MovieDetailsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-        <div className="container mx-auto px-6 py-12">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-700 rounded w-64 mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <div className="h-64 bg-gray-700 rounded mb-4"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-700 rounded w-full"></div>
-                  <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+          <div className="container mx-auto px-6 py-12">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-700 rounded w-64 mb-8"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <div className="h-64 bg-gray-700 rounded mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-700 rounded w-full"></div>
+                    <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="h-96 bg-gray-700 rounded"></div>
+                <div>
+                  <div className="h-96 bg-gray-700 rounded"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <MovieDetailsContent />
     </Suspense>
   );

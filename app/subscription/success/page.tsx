@@ -92,6 +92,11 @@ function SuccessContent() {
 
         setSuccess(true);
 
+        // Trigger global subscription update event
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("subscription-updated"));
+        }
+
         // If a returnTo param is present, redirect after brief delay
         const returnTo = searchParams.get("returnTo");
         if (returnTo) {
@@ -102,7 +107,7 @@ function SuccessContent() {
             } catch (_) {
               window.location.href = returnTo;
             }
-          }, 800);
+          }, 1500); // Increased delay to ensure subscription is processed
         }
       } catch (err) {
         console.error("Verification error:", err);
