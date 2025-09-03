@@ -109,7 +109,8 @@ export async function POST(request: NextRequest) {
           email: session.user.email || "user@example.com",
           tx_ref: txRef,
           callback_url: "https://movie-streaming-service-theta.vercel.app/api/webhooks/chapa",
-          return_url: "https://movie-streaming-service-theta.vercel.app/subscription/success",
+          // Ensure tx_ref is present on return URL even if provider doesn't append it
+          return_url: `https://movie-streaming-service-theta.vercel.app/subscription/success?tx_ref=${encodeURIComponent(txRef)}`,
           meta: {
             userId: session.user.id,
             planId: plan.id,
