@@ -8,6 +8,7 @@ interface InitializePayload {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone_number?: string; // add this
   tx_ref: string; // unique per transaction
   callback_url?: string;
   return_url?: string;
