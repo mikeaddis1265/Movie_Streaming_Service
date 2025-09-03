@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 // PUT update plan
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -92,7 +92,7 @@ export async function PUT(
       );
     }
 
-    const { id } = context.params;
+    const { id } = await params;
     const body = await request.json();
     const { ...updates } = body;
 
@@ -126,7 +126,7 @@ export async function PUT(
 // DELETE archive plan
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -137,7 +137,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = context.params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     }
