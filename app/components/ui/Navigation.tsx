@@ -50,13 +50,19 @@ export default function Navigation() {
     if (!session?.user?.id) return;
     
     try {
+      console.log('Navigation: Fetching subscription for user:', session.user.id);
       const response = await fetch(`/api/users/${session.user.id}/subscriptions`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Navigation: Subscription data received:', data.data);
         setUserSubscription(data.data);
+      } else {
+        console.log('Navigation: No subscription found or error');
+        setUserSubscription(null);
       }
     } catch (error) {
-      console.error('Failed to fetch subscription:', error);
+      console.error('Navigation: Failed to fetch subscription:', error);
+      setUserSubscription(null);
     }
   };
 

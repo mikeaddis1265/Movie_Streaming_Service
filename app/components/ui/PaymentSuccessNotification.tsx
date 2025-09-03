@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function PaymentSuccessNotification() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { update: updateSession } = useSession();
   const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
@@ -32,20 +34,51 @@ export default function PaymentSuccessNotification() {
 
   const processPaymentWebhook = async (txRef: string) => {
     try {
+      console.log("Processing payment webhook for tx_ref:", txRef);
+      
       // Call our webhook manually to process the payment
-      await fetch("/api/webhooks/chapa", {
+      const webhookResponse = await fetch("/api/webhooks/chapa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tx_ref: txRef }),
       });
+      
+      if (webhookResponse.ok) {
+        console.log("Payment webhook processed successfully");
+      } else {
+        console.error("Webhook failed:", await webhookResponse.text());
+      }
       
       // Clean up any saved tx_ref
       try {
         sessionStorage.removeItem("chapa_tx_ref");
       } catch (_) {}
       
+      // Wait a moment for database to be fully updated
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update the session to reflect subscription changes
+      console.log("Updating session...");
+      await updateSession();
+      
+      // Wait another moment for session update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Trigger subscription update event for other components
+      console.log("Dispatching subscription-updated event");
       window.dispatchEvent(new Event("subscription-updated"));
+      
+      // Also dispatch a more specific payment success event
+      window.dispatchEvent(new CustomEvent("payment-success", { 
+        detail: { txRef, timestamp: Date.now() } 
+      }));
+      
+      // Force a more aggressive refresh after a short delay
+      setTimeout(() => {
+        console.log("Forcing page refresh to ensure UI updates");
+        window.location.reload();
+      }, 3000);
+      
     } catch (error) {
       console.error("Error processing payment webhook:", error);
     }
