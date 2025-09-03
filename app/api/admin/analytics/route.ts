@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
       activeSubscriptions,
       totalWatchlistItems,
       totalRatings,
-      totalReviews,
       userGrowth,
       popularGenres,
       activeUsers
@@ -61,8 +60,7 @@ export async function GET(request: NextRequest) {
       // Total ratings
       prisma.rating.count(),
 
-      // Total reviews
-      prisma.review.count(),
+    
 
       // User growth over time (grouped by day)
       prisma.user.groupBy({
@@ -104,7 +102,6 @@ export async function GET(request: NextRequest) {
           activeSubscriptions,
           totalWatchlistItems,
           totalRatings,
-          totalReviews,
           activeUsers,
         },
         growth: {
