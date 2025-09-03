@@ -36,7 +36,7 @@ async function verify(token: string) {
   return {
     verified: true,
     email: record.identifier,
-    message: "Email verified successfully! You can now log in."
+    message: "Email verified successfully! You can now log in.",
   };
 }
 
@@ -54,11 +54,23 @@ export async function GET(req: Request) {
     }
 
     const result = await verify(token);
-    
+
     // Redirect to auth page with success message for GET requests
-    return NextResponse.redirect(new URL('/auth?verified=true&email=' + encodeURIComponent(result.email), req.url));
+    return NextResponse.redirect(
+      new URL(
+        "https://movie-streaming-service-theta.vercel.app//auth?verified=true&email=" +
+          encodeURIComponent(result.email),
+        req.url
+      )
+    );
   } catch (error) {
-    return NextResponse.redirect(new URL('/auth?verified=false&error=' + encodeURIComponent('Verification failed'), req.url));
+    return NextResponse.redirect(
+      new URL(
+        "https://movie-streaming-service-theta.vercel.app//auth?verified=false&error=" +
+          encodeURIComponent("Verification failed"),
+        req.url
+      )
+    );
   }
 }
 
@@ -75,11 +87,11 @@ export async function POST(req: Request) {
     }
 
     const result = await verify(token);
-    
+
     // Return JSON response for POST requests
     return NextResponse.json({
       data: result,
-      message: result.message
+      message: result.message,
     });
   } catch (error) {
     return handleApiError(error);
