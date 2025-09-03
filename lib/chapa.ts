@@ -55,12 +55,27 @@ export async function chapaInitialize(payload: InitializePayload) {
 }
 
 export async function chapaVerify(txRef: string) {
-  const res = await fetch(`${CHAPA_BASE}/transaction/verify/${txRef}`, {
-    headers: { Authorization: `Bearer ${env.CHAPA_SECRET_KEY}` },
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Chapa verify failed: ${res.status} ${text}`);
+  console.log("Verifying transaction:", txRef);
+  console.log("Using Chapa secret key:", env.CHAPA_SECRET_KEY ? "***SET***" : "***NOT SET***");
+  
+  try {
+    const res = await fetch(`${CHAPA_BASE}/transaction/verify/${txRef}`, {
+      headers: { Authorization: `Bearer ${env.CHAPA_SECRET_KEY}` },
+    });
+    
+    console.log("Verification response status:", res.status);
+    
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Chapa verification failed:", res.status, text);
+      throw new Error(`Chapa verify failed: ${res.status} ${text}`);
+    }
+    
+    const result = await res.json();
+    console.log("Verification result:", JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error("Error during Chapa verification:", error);
+    throw error;
   }
-  return res.json();
 }
