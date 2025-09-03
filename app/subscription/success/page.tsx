@@ -78,10 +78,13 @@ function SuccessContent() {
             console.error("Error calling webhook:", webhookError);
           }
 
+          // Wait for database operations to fully complete
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
           // Try to load user subscription if session exists
           if (session?.user?.id) {
             const response = await fetch(
-              `/api/users/${session.user.id}/subscriptions`
+              `/api/users/${session.user.id}/subscriptions?_t=${Date.now()}`
             );
             if (response.ok) {
               const data = await response.json();
@@ -92,24 +95,18 @@ function SuccessContent() {
 
         setSuccess(true);
 
-        // Trigger global subscription update event
+        // Trigger global subscription update event and force refresh
         if (typeof window !== "undefined") {
+          console.log("Dispatching subscription update events...");
           window.dispatchEvent(new Event("subscription-updated"));
+          window.dispatchEvent(new CustomEvent("force-subscription-refresh"));
+          
+          // Force a hard refresh to ensure all components get updated data
+          setTimeout(() => {
+            console.log("Performing hard refresh to update all UI components");
+            window.location.reload();
+          }, 2000);
         }
-
-        // Always redirect after processing - either to returnTo or home page
-        const returnTo = searchParams.get("returnTo");
-        const redirectUrl = returnTo || "/";
-        
-        setTimeout(() => {
-          try {
-            console.log("Redirecting to:", redirectUrl);
-            // Prefer client-side navigation
-            router.push(redirectUrl);
-          } catch (_) {
-            window.location.href = redirectUrl;
-          }
-        }, 3000); // Give time for all processing to complete
       } catch (err) {
         console.error("Verification error:", err);
         setError("Failed to verify payment");

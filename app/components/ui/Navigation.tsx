@@ -38,12 +38,25 @@ export default function Navigation() {
   useEffect(() => {
     const handleSubscriptionUpdate = () => {
       if (session?.user?.id) {
+        console.log('Navigation: Subscription update event received');
+        fetchUserSubscription();
+      }
+    };
+
+    const handleForceRefresh = () => {
+      if (session?.user?.id) {
+        console.log('Navigation: Force subscription refresh event received');
         fetchUserSubscription();
       }
     };
 
     window.addEventListener('subscription-updated', handleSubscriptionUpdate);
-    return () => window.removeEventListener('subscription-updated', handleSubscriptionUpdate);
+    window.addEventListener('force-subscription-refresh', handleForceRefresh);
+    
+    return () => {
+      window.removeEventListener('subscription-updated', handleSubscriptionUpdate);
+      window.removeEventListener('force-subscription-refresh', handleForceRefresh);
+    };
   }, [session]);
 
   const fetchUserSubscription = async () => {
@@ -51,7 +64,7 @@ export default function Navigation() {
     
     try {
       console.log('Navigation: Fetching subscription for user:', session.user.id);
-      const response = await fetch(`/api/users/${session.user.id}/subscriptions`);
+      const response = await fetch(`/api/users/${session.user.id}/subscriptions?_t=${Date.now()}`);
       if (response.ok) {
         const data = await response.json();
         console.log('Navigation: Subscription data received:', data.data);
