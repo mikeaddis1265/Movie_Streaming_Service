@@ -75,20 +75,41 @@ export async function PUT(request: NextRequest) {
 
 // DELETE archive plan
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    const plan = await prisma.subscriptionPlan.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    return NextResponse.json({ data: plan });
+  } catch (error) {
+    console.error("Admin subscription plan DELETE error:", error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Subscription plan not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
+      { error: "Failed to delete subscription plan" },
+      { status: 500 }
     );
   }
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  if (!id)
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
-  const plan = await prisma.subscriptionPlan.update({
-    where: { id },
-    data: { isActive: false },
-  });
-  return NextResponse.json({ data: plan });
 }
