@@ -108,9 +108,9 @@ export async function POST(request: NextRequest) {
           currency: plan.currency,
           email: session.user.email || "user@example.com",
           tx_ref: txRef,
-          callback_url: env.CHAPA_CALLBACK_URL,
-          return_url: env.CHAPA_RETURN_URL,
-          custom_fields: {
+          callback_url: "https://movie-streaming-service-theta.vercel.app/api/webhooks/chapa",
+          return_url: "https://movie-streaming-service-theta.vercel.app/subscription/success",
+          meta: {
             userId: session.user.id,
             planId: plan.id,
           },
