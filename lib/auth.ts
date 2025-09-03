@@ -117,6 +117,9 @@ export const authOptions: NextAuthOptions = {
       } else if (token.email || trigger === "update") {
         // Fetch user data from database to get updated role, subscription info
         try {
+          // Only fetch if we have a valid email
+          if (!token.email) return token;
+          
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email },
             include: { 
