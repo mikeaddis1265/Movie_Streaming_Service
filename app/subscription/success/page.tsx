@@ -17,8 +17,15 @@ function SuccessContent() {
     const verifyPayment = async () => {
       try {
         // Get tx_ref from URL params
-        const txRef = searchParams.get('tx_ref');
+        let txRef = searchParams.get('tx_ref');
         const status = searchParams.get('status');
+
+        // Fallback: read tx_ref from sessionStorage if not in URL
+        if (!txRef && typeof window !== 'undefined') {
+          try {
+            txRef = sessionStorage.getItem('chapa_tx_ref');
+          } catch (_) {}
+        }
 
         if (!txRef) {
           setError('Missing transaction reference');
@@ -26,7 +33,8 @@ function SuccessContent() {
           return;
         }
 
-        if (status !== 'success') {
+        // If status is missing (some providers do not append it), try to proceed and let server-side verification decide
+        if (status && status !== 'success') {
           setError('Payment was not successful');
           setVerifying(false);
           return;
@@ -46,6 +54,8 @@ function SuccessContent() {
             
             if (webhookResponse.ok) {
               console.log('Payment processed successfully');
+              // Cleanup saved tx_ref so we don't reuse it accidentally
+              try { sessionStorage.removeItem('chapa_tx_ref'); } catch (_) {}
             } else {
               console.error('Webhook processing failed:', await webhookResponse.text());
             }

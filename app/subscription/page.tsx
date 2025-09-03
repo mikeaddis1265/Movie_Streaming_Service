@@ -219,6 +219,12 @@ export default function SubscriptionPage() {
 
       if (response.ok) {
         if (data.data?.checkout_url && !data.data.checkout_url.includes('demo')) {
+          // Persist tx_ref for the return page in case provider doesn't append query params
+          if (typeof window !== 'undefined' && data.data?.tx_ref) {
+            try {
+              sessionStorage.setItem('chapa_tx_ref', data.data.tx_ref);
+            } catch (_) {}
+          }
           // Redirect to payment provider
           window.location.href = data.data.checkout_url;
         } else {
@@ -311,6 +317,12 @@ export default function SubscriptionPage() {
 
       if (response.ok) {
         if (data.data?.checkout_url && !data.data.checkout_url.includes('demo')) {
+          // Persist tx_ref for the return page in case provider doesn't append query params
+          if (typeof window !== 'undefined' && data.data?.tx_ref) {
+            try {
+              sessionStorage.setItem('chapa_tx_ref', data.data.tx_ref);
+            } catch (_) {}
+          }
           // Redirect to payment provider for upgrade
           window.location.href = data.data.checkout_url;
         } else {
