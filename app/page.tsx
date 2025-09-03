@@ -4,6 +4,7 @@ import Footer from "@/app/components/ui/Footer";
 import PaymentSuccessNotification from "@/app/components/ui/PaymentSuccessNotification";
 import { fetchMovies, fetchNowPlayingMovies, fetchTrendingMovies, fetchTopRatedMovies } from "@/lib/tmdbapi";
 import Link from "next/link";
+import { Suspense } from "react";
 
 interface Movie {
   id: number;
@@ -57,7 +58,9 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Payment Success Notification */}
-      <PaymentSuccessNotification />
+      <Suspense fallback={null}>
+        <PaymentSuccessNotification />
+      </Suspense>
       
       {/* Featured Movie Section */}
       {popularMovies.length > 0 && (

@@ -43,6 +43,9 @@ export default function PaymentSuccessNotification() {
       try {
         sessionStorage.removeItem("chapa_tx_ref");
       } catch (_) {}
+      
+      // Trigger subscription update event for other components
+      window.dispatchEvent(new Event("subscription-updated"));
     } catch (error) {
       console.error("Error processing payment webhook:", error);
     }

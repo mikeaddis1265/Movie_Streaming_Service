@@ -103,6 +103,33 @@ function MovieDetailsContent() {
     fetchMovieDetails();
   }, [movieId]);
 
+  // Listen for subscription updates to refresh movie data
+  useEffect(() => {
+    const handleSubscriptionUpdate = () => {
+      if (!movieId) return;
+      
+      // Refetch movie details to get updated subscription status
+      fetch(`/api/movies/${movieId}`)
+        .then(response => response.json())
+        .then(result => {
+          if (result.data) {
+            setMovie(result.data);
+            setUserRating(result.data.userData?.userRating);
+            setInWatchlist(result.data.userData?.inWatchlist);
+            setInFavorites(result.data.userData?.inFavorites);
+          }
+        })
+        .catch(error => {
+          console.error('Failed to refresh movie data after subscription update:', error);
+        });
+    };
+
+    window.addEventListener('subscription-updated', handleSubscriptionUpdate);
+    return () => {
+      window.removeEventListener('subscription-updated', handleSubscriptionUpdate);
+    };
+  }, [movieId]);
+
   const [watchlistLoading, setWatchlistLoading] = useState(false);
   const [watchlistMessage, setWatchlistMessage] = useState<string | null>(null);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
