@@ -13,12 +13,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID || "",
       clientSecret: env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
         try {
@@ -29,7 +30,7 @@ export const authOptions: NextAuthOptions = {
           const { email, password } = credentials;
 
           const user = await prisma.user.findUnique({
-            where: { email }
+            where: { email },
           });
 
           if (!user || !user.password) {
@@ -55,59 +56,13 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           return null;
         }
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account?.provider === "google") {
-        try {
-          // Check if user exists in database
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! },
-            include: { accounts: true }
-          });
-
-          if (!existingUser) {
-            // Create new user for Google OAuth
-            const newUser = await prisma.user.create({
-              data: {
-                email: user.email!,
-                name: user.name || "",
-                image: user.image || null,
-                emailVerified: new Date(), // Google emails are pre-verified
-                role: "USER"
-              }
-            });
-            console.log('Created new Google OAuth user:', newUser.id);
-          } else {
-            // User exists - check if they already have a Google account linked
-            const googleAccount = existingUser.accounts.find(acc => acc.provider === 'google');
-            
-            if (!googleAccount) {
-              // User exists but no Google account linked - this will be handled by the adapter
-              console.log('Linking Google account to existing user:', existingUser.id);
-              
-              // Update user info with Google data if they don't have a name/image
-              if (!existingUser.name && user.name) {
-                await prisma.user.update({
-                  where: { id: existingUser.id },
-                  data: { 
-                    name: user.name,
-                    image: user.image || existingUser.image,
-                    emailVerified: existingUser.emailVerified || new Date() // Verify email if not already verified
-                  }
-                });
-              }
-            } else {
-              console.log('Existing Google OAuth user found:', existingUser.id);
-            }
-          }
-        } catch (error) {
-          console.error('Error handling Google OAuth user:', error);
-          return false; // Deny sign in if we can't handle user
-        }
-      }
+    async signIn({ account }) {
+      // Defer to PrismaAdapter for account creation/linking
+      // Keep default provider safety (no auto-linking by email unless explicitly enabled)
       return true;
     },
     async jwt({ token, user, trigger, session }) {
@@ -115,46 +70,57 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
       }
-      
+
       // Always fetch fresh user data on signin or when explicitly triggered
-      const lastUpdated = typeof token.lastUpdated === 'number' ? token.lastUpdated : 0;
-      if (user || trigger === "update" || !token.lastUpdated || (Date.now() - lastUpdated > 5 * 60 * 1000)) {
+      const lastUpdated =
+        typeof token.lastUpdated === "number" ? token.lastUpdated : 0;
+      if (
+        user ||
+        trigger === "update" ||
+        !token.lastUpdated ||
+        Date.now() - lastUpdated > 5 * 60 * 1000
+      ) {
         // Fetch user data from database to get updated role, subscription info
         try {
           // Only fetch if we have a valid email
           if (!token.email) return token;
-          
-          console.log('JWT Callback: Fetching fresh user data for:', token.email);
+
+          console.log(
+            "JWT Callback: Fetching fresh user data for:",
+            token.email
+          );
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email },
-            include: { 
-              subscription: true 
-            }
+            include: {
+              subscription: true,
+            },
           });
           if (dbUser) {
             token.id = dbUser.id;
             token.role = dbUser.role;
             // Add subscription data to token to force session update
             const currentDate = new Date();
-            const hasActiveSubscription = !!(dbUser.subscription && 
-                                            dbUser.subscription.status === "ACTIVE" && 
-                                            dbUser.subscription.currentPeriodEnd && 
-                                            dbUser.subscription.currentPeriodEnd > currentDate);
+            const hasActiveSubscription = !!(
+              dbUser.subscription &&
+              dbUser.subscription.status === "ACTIVE" &&
+              dbUser.subscription.currentPeriodEnd &&
+              dbUser.subscription.currentPeriodEnd > currentDate
+            );
             token.hasActiveSubscription = hasActiveSubscription;
             token.subscription = dbUser.subscription;
             token.lastUpdated = Date.now(); // Track when we last fetched data
-            
-            console.log('JWT Callback: User subscription status:', {
+
+            console.log("JWT Callback: User subscription status:", {
               userId: dbUser.id,
               email: dbUser.email,
               hasSubscription: !!dbUser.subscription,
               subscriptionStatus: dbUser.subscription?.status,
               isActive: hasActiveSubscription,
-              currentPeriodEnd: dbUser.subscription?.currentPeriodEnd
+              currentPeriodEnd: dbUser.subscription?.currentPeriodEnd,
             });
           }
         } catch (error) {
-          console.error('Error fetching user data in JWT callback:', error);
+          console.error("Error fetching user data in JWT callback:", error);
         }
       }
       return token;
@@ -170,7 +136,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/auth',
+    signIn: "/auth",
   },
   secret: env.NEXTAUTH_SECRET,
 };

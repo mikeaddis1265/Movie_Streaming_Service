@@ -1,165 +1,158 @@
-generator client {
-  provider = "prisma-client-js"
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
 
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
-/// *
-///  * ******************************
-///  * AUTHENTICATION MODELS (NextAuth.js)
-///  * ******************************
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-/// *
-///  * ******************************
-///  * USER & APPLICATION MODELS
-///  * ******************************
-model User {
-  id             String           @id @default(cuid())
-  name           String?
-  email          String?          @unique
-  emailVerified  DateTime?
-  image          String?
-  password       String?
-  username       String?          @unique
-  role           Role             @default(USER)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  accounts       Account[]
-  favorites      Favorite[]
-  ratings        Rating[]
-  subscription   Subscription?
-  viewingHistory ViewingHistory[]
-  watchlist      WatchlistItem[]
-
-  @@map("users")
-}
-
-model WatchlistItem {
-  id        String    @id @default(cuid())
-  userId    String
-  tmdbId    Int
-  mediaType MediaType
-  addedAt   DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, tmdbId, mediaType])
-  @@map("watchlist_items")
-}
-
-model ViewingHistory {
-  id        String    @id @default(cuid())
-  userId    String
-  tmdbId    Int
-  mediaType MediaType
-  progress  Float?
-  season    Int?
-  episode   Int?
-  watchedAt DateTime  @default(now())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, tmdbId, mediaType])
-  @@map("viewing_history")
-}
-
-model Rating {
-  id        String    @id @default(cuid())
-  userId    String
-  tmdbId    Int
-  mediaType MediaType
-  value     Int
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, tmdbId, mediaType])
-  @@map("ratings")
-}
+  datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+  }
 
 
-model Favorite {
-  id        String    @id @default(cuid())
-  userId    String
-  tmdbId    Int
-  mediaType MediaType
-  addedAt   DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String?
+    access_token      String?
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String?
+    session_state     String?
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, tmdbId, mediaType])
-  @@map("favorites")
-}
+    @@unique([provider, providerAccountId])
+  }
 
-model Subscription {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  planId             String
-  status             SubscriptionStatus @default(ACTIVE)
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean            @default(false)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
 
-  @@map("subscriptions")
-}
+    @@unique([identifier, token])
+  }
 
-model SubscriptionPlan {
-  id        String   @id @default(cuid())
-  name      String
-  price     Float
-  currency  String   @default("USD")
-  interval  String
-  features  String[]
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  model User {
+    id             String           @id @default(cuid())
+    name           String?
+    email          String?          @unique
+    emailVerified  DateTime?
+    image          String?
+    password       String?
+    username       String?          @unique
+    role           Role             @default(USER)
+    createdAt      DateTime         @default(now())
+    updatedAt      DateTime         @updatedAt
+    accounts       Account[]
+    favorites      Favorite[]
+    ratings        Rating[]
+    subscription   Subscription?
+    viewingHistory ViewingHistory[]
+    watchlist      WatchlistItem[]
 
-  @@map("subscription_plans")
-}
+    @@map("users")
+  }
+
+  model WatchlistItem {
+    id        String    @id @default(cuid())
+    userId    String
+    tmdbId    Int
+    mediaType MediaType
+    addedAt   DateTime  @default(now())
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, tmdbId, mediaType])
+    @@map("watchlist_items")
+  }
+
+  model ViewingHistory {
+    id        String    @id @default(cuid())
+    userId    String
+    tmdbId    Int
+    mediaType MediaType
+    progress  Float?
+    season    Int?
+    episode   Int?
+    watchedAt DateTime  @default(now())
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, tmdbId, mediaType])
+    @@map("viewing_history")
+  }
+
+  model Rating {
+    id        String    @id @default(cuid())
+    userId    String
+    tmdbId    Int
+    mediaType MediaType
+    value     Int
+    createdAt DateTime  @default(now())
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, tmdbId, mediaType])
+    @@map("ratings")
+  }
 
 
-enum Role {
-  USER
-  ADMIN
-}
+  model Favorite {
+    id        String    @id @default(cuid())
+    userId    String
+    tmdbId    Int
+    mediaType MediaType
+    addedAt   DateTime  @default(now())
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-enum MediaType {
-  MOVIE
-  TV
-}
+    @@unique([userId, tmdbId, mediaType])
+    @@map("favorites")
+  }
 
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELED
-  PAST_DUE
-  TRIALING
-}
+  model Subscription {
+    id                 String             @id @default(cuid())
+    userId             String             @unique
+    planId             String
+    status             SubscriptionStatus @default(ACTIVE)
+    currentPeriodStart DateTime
+    currentPeriodEnd   DateTime
+    cancelAtPeriodEnd  Boolean            @default(false)
+    createdAt          DateTime           @default(now())
+    updatedAt          DateTime           @updatedAt
+    user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("subscriptions")
+  }
+
+  model SubscriptionPlan {
+    id        String   @id @default(cuid())
+    name      String
+    price     Float
+    currency  String   @default("USD")
+    interval  String
+    features  String[]
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+
+    @@map("subscription_plans")
+  }
+
+
+  enum Role {
+    USER
+    ADMIN
+  }
+
+  enum MediaType {
+    MOVIE
+    TV
+  }
+
+  enum SubscriptionStatus {
+    ACTIVE
+    CANCELED
+    PAST_DUE
+    TRIALING
+  }

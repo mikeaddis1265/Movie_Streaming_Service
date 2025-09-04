@@ -101,15 +101,8 @@ function AuthContent() {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signIn("google", { callbackUrl: "/", redirect: false });
-      if (result?.ok) {
-        // Force session update to include latest subscription data
-        console.log("Google login successful, updating session...");
-        await update();
-        router.push("/");
-      } else if (result?.error) {
-        setError("Google login failed: " + result.error);
-      }
+      // For OAuth providers, allow NextAuth to handle the full redirect flow
+      await signIn("google", { callbackUrl: "/" });
     } catch (err) {
       setError("Google login failed");
     }
