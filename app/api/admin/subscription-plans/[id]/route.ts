@@ -101,7 +101,7 @@ export async function PUT(
     }
 
     const plan = await prisma.subscriptionPlan.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: updates,
     });
 
@@ -143,7 +143,7 @@ export async function DELETE(
     }
 
     const plan = await prisma.subscriptionPlan.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: { isActive: false },
     });
 
