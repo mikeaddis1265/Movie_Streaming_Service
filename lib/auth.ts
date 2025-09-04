@@ -152,9 +152,6 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       console.log("User signed in:", { user: user?.email, provider: account?.provider });
     },
-    async signInError({ error }) {
-      console.error("Sign in error:", error);
-    },
   },
   secret: env.NEXTAUTH_SECRET,
 };
