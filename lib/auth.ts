@@ -117,7 +117,8 @@ export const authOptions: NextAuthOptions = {
       }
       
       // Always fetch fresh user data on signin or when explicitly triggered
-      if (user || trigger === "update" || !token.lastUpdated || (Date.now() - token.lastUpdated > 5 * 60 * 1000)) {
+      const lastUpdated = typeof token.lastUpdated === 'number' ? token.lastUpdated : 0;
+      if (user || trigger === "update" || !token.lastUpdated || (Date.now() - lastUpdated > 5 * 60 * 1000)) {
         // Fetch user data from database to get updated role, subscription info
         try {
           // Only fetch if we have a valid email
