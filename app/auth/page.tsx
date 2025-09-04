@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 function AuthContent() {
   const [email, setEmail] = useState("");
@@ -17,6 +17,7 @@ function AuthContent() {
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { update } = useSession();
 
   // Handle verification success/failure messages
   useEffect(() => {
@@ -56,6 +57,9 @@ function AuthContent() {
             setError("Login failed: " + result.error);
           }
         } else {
+          // Force session update to include latest subscription data
+          console.log("Login successful, updating session...");
+          await update();
           router.push("/");
         }
       } else {
@@ -97,7 +101,15 @@ function AuthContent() {
 
   const handleGoogleLogin = async () => {
     try {
-      await signIn("google", { callbackUrl: "/" });
+      const result = await signIn("google", { callbackUrl: "/", redirect: false });
+      if (result?.ok) {
+        // Force session update to include latest subscription data
+        console.log("Google login successful, updating session...");
+        await update();
+        router.push("/");
+      } else if (result?.error) {
+        setError("Google login failed: " + result.error);
+      }
     } catch (err) {
       setError("Google login failed");
     }

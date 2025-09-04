@@ -89,7 +89,10 @@ export default function Navigation() {
   }, [session]);
 
   const fetchUserSubscription = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.log('Navigation: No user ID in session, skipping subscription fetch');
+      return;
+    }
     
     try {
       console.log('Navigation: Fetching subscription for user:', session.user.id);
@@ -99,7 +102,7 @@ export default function Navigation() {
         console.log('Navigation: Subscription data received:', data.data);
         setUserSubscription(data.data);
       } else {
-        console.log('Navigation: No subscription found or error');
+        console.log('Navigation: Subscription API error:', response.status, response.statusText);
         setUserSubscription(null);
       }
     } catch (error) {

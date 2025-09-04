@@ -114,12 +114,16 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-      } else if (token.email || trigger === "update") {
+      }
+      
+      // Always fetch fresh user data on signin or when explicitly triggered
+      if (user || trigger === "update" || !token.lastUpdated || (Date.now() - token.lastUpdated > 5 * 60 * 1000)) {
         // Fetch user data from database to get updated role, subscription info
         try {
           // Only fetch if we have a valid email
           if (!token.email) return token;
           
+          console.log('JWT Callback: Fetching fresh user data for:', token.email);
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email },
             include: { 
@@ -131,12 +135,22 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
             // Add subscription data to token to force session update
             const currentDate = new Date();
-            token.hasActiveSubscription = !!(dbUser.subscription && 
+            const hasActiveSubscription = !!(dbUser.subscription && 
                                             dbUser.subscription.status === "ACTIVE" && 
                                             dbUser.subscription.currentPeriodEnd && 
                                             dbUser.subscription.currentPeriodEnd > currentDate);
+            token.hasActiveSubscription = hasActiveSubscription;
             token.subscription = dbUser.subscription;
-            token.lastUpdated = Date.now(); // Force token refresh
+            token.lastUpdated = Date.now(); // Track when we last fetched data
+            
+            console.log('JWT Callback: User subscription status:', {
+              userId: dbUser.id,
+              email: dbUser.email,
+              hasSubscription: !!dbUser.subscription,
+              subscriptionStatus: dbUser.subscription?.status,
+              isActive: hasActiveSubscription,
+              currentPeriodEnd: dbUser.subscription?.currentPeriodEnd
+            });
           }
         } catch (error) {
           console.error('Error fetching user data in JWT callback:', error);
