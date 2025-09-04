@@ -40,11 +40,11 @@ export default function Navigation() {
       const paymentSuccess = sessionStorage.getItem('payment_success_completed');
       if (paymentSuccess) {
         console.log('Navigation: Detected recent payment success, forcing subscription refresh');
-        // Remove the flag and force another refresh after a short delay
+        // Remove the flag and force multiple refreshes with increasing delays
         sessionStorage.removeItem('payment_success_completed');
-        setTimeout(() => {
-          fetchUserSubscription();
-        }, 500);
+        setTimeout(() => fetchUserSubscription(), 500);
+        setTimeout(() => fetchUserSubscription(), 1500);
+        setTimeout(() => fetchUserSubscription(), 3000);
       }
     }
   }, [session]);

@@ -109,31 +109,38 @@ function MovieDetailsContent() {
 
       console.log("Subscription update event received, refreshing movie data...");
       
-      // Add a small delay to ensure the database has been updated
-      setTimeout(() => {
-        // Refetch movie details to get updated subscription status
-        fetch(`/api/movies/${movieId}?_t=${Date.now()}`) // Add cache busting
-          .then((response) => response.json())
-          .then((result) => {
-            if (result.data) {
-              console.log("Movie data refreshed:", {
-                requiresSubscription: result.data.requiresSubscription,
-                hasActiveSubscription: result.data.hasActiveSubscription,
-                canWatch: result.data.canWatch
-              });
-              setMovie(result.data);
-              setUserRating(result.data.userData?.userRating);
-              setInWatchlist(result.data.userData?.inWatchlist);
-              setInFavorites(result.data.userData?.inFavorites);
-            }
-          })
-          .catch((error) => {
-            console.error(
-              "Failed to refresh movie data after subscription update:",
-              error
-            );
-          });
-      }, 1000); // Give time for database to be updated
+      // Add multiple delays with increasing timeouts to handle database timing issues
+      const fetchWithDelay = (delay: number, attempt: number) => {
+        setTimeout(() => {
+          console.log(`Attempt ${attempt}: Refreshing movie data after subscription update...`);
+          fetch(`/api/movies/${movieId}?_t=${Date.now()}`) // Add cache busting
+            .then((response) => response.json())
+            .then((result) => {
+              if (result.data) {
+                console.log(`Attempt ${attempt} - Movie data refreshed:`, {
+                  requiresSubscription: result.data.requiresSubscription,
+                  hasActiveSubscription: result.data.hasActiveSubscription,
+                  canWatch: result.data.canWatch
+                });
+                setMovie(result.data);
+                setUserRating(result.data.userData?.userRating);
+                setInWatchlist(result.data.userData?.inWatchlist);
+                setInFavorites(result.data.userData?.inFavorites);
+              }
+            })
+            .catch((error) => {
+              console.error(
+                `Failed to refresh movie data on attempt ${attempt}:`,
+                error
+              );
+            });
+        }, delay);
+      };
+      
+      // Try multiple times with increasing delays to catch subscription updates
+      fetchWithDelay(1000, 1);  // 1 second
+      fetchWithDelay(2500, 2);  // 2.5 seconds  
+      fetchWithDelay(5000, 3);  // 5 seconds
     };
 
     const handlePaymentSuccess = () => {

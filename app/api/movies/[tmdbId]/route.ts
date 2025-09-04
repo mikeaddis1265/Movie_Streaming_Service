@@ -82,16 +82,33 @@ export async function GET(
       });
       inFavorites = !!favorite;
       
-      // Check user's subscription status
+      // Check user's subscription status with detailed logging
+      console.log(`=== MOVIE API SUBSCRIPTION CHECK FOR USER ${userId} ===`);
       const subscription = await prisma.subscription.findUnique({
         where: { userId },
       });
+      
+      console.log('Found subscription:', subscription ? {
+        id: subscription.id,
+        userId: subscription.userId,
+        planId: subscription.planId,
+        status: subscription.status,
+        currentPeriodStart: subscription.currentPeriodStart,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+      } : null);
       
       const currentDate = new Date();
       hasActiveSubscription = !!(subscription && 
                                 subscription.status === "ACTIVE" && 
                                 subscription.currentPeriodEnd && 
                                 subscription.currentPeriodEnd > currentDate);
+      
+      console.log('Current date:', currentDate.toISOString());
+      console.log('Period end:', subscription?.currentPeriodEnd?.toISOString());
+      console.log('Has active subscription:', hasActiveSubscription);
+      console.log('Requires subscription:', requiresSubscription);
+      console.log('Can watch:', !requiresSubscription || hasActiveSubscription);
+      console.log('==============================================');
     }
 
     // 5. Fetch additional data from TMDb (in parallel for better performance)
