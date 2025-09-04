@@ -110,6 +110,13 @@ function SuccessContent() {
           window.dispatchEvent(new Event("subscription-updated"));
           window.dispatchEvent(new CustomEvent("force-subscription-refresh"));
 
+          // Set a flag that navigation completed successfully so Navigation can detect it
+          try {
+            sessionStorage.setItem('payment_success_completed', 'true');
+          } catch (_) {
+            // Ignore storage errors
+          }
+
           // Give components time to update instead of force reloading
           // This prevents the reload loop that was causing users to get stuck
           setTimeout(() => {

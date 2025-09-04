@@ -34,6 +34,18 @@ export default function Navigation() {
   useEffect(() => {
     if (session?.user?.id) {
       fetchUserSubscription();
+      
+      // Check if we recently came from a payment success
+      // This helps catch cases where the user navigated from success page
+      const paymentSuccess = sessionStorage.getItem('payment_success_completed');
+      if (paymentSuccess) {
+        console.log('Navigation: Detected recent payment success, forcing subscription refresh');
+        // Remove the flag and force another refresh after a short delay
+        sessionStorage.removeItem('payment_success_completed');
+        setTimeout(() => {
+          fetchUserSubscription();
+        }, 500);
+      }
     }
   }, [session]);
 
@@ -41,6 +53,14 @@ export default function Navigation() {
   useEffect(() => {
     if (session?.user?.id) {
       fetchUserSubscription();
+      
+      // If we just navigated from the success page, force another refresh
+      if (typeof window !== 'undefined' && document.referrer.includes('/subscription/success')) {
+        console.log('Navigation: Came from success page, forcing additional subscription refresh');
+        setTimeout(() => {
+          fetchUserSubscription();
+        }, 200);
+      }
     }
   }, [pathname]);
 
