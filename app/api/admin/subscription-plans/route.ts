@@ -109,7 +109,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
     
     const plan = await prisma.subscriptionPlan.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: { isActive: false },
     });
     
