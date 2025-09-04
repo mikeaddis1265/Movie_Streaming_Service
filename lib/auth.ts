@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
       // Force refresh if subscription might have changed recently
       const forceRefresh = trigger === "update" || 
                           !token.lastUpdated || 
-                          Date.now() - lastUpdated > 30 * 1000; // Reduced to 30 seconds for subscription updates
+                          Date.now() - lastUpdated > 60 * 1000; // 1 minute refresh for subscription updates
       
       if (user || forceRefresh) {
         // Fetch user data from database to get updated role, subscription info

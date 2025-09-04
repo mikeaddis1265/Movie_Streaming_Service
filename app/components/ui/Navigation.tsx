@@ -46,17 +46,14 @@ export default function Navigation() {
         if (forceRefresh) sessionStorage.removeItem('force_subscription_refresh');
         if (paymentSuccess) sessionStorage.removeItem('payment_success_completed');
         
-        // Aggressive refresh pattern
-        const refreshAggressively = () => {
-          setTimeout(() => fetchUserSubscription(), 100);
-          setTimeout(() => fetchUserSubscription(), 500);
+        // Controlled refresh pattern - less aggressive
+        const refreshControlled = () => {
           setTimeout(() => fetchUserSubscription(), 1000);
-          setTimeout(() => fetchUserSubscription(), 2000);
           setTimeout(() => fetchUserSubscription(), 3000);
-          setTimeout(() => fetchUserSubscription(), 5000);
+          setTimeout(() => fetchUserSubscription(), 6000);
         };
         
-        refreshAggressively();
+        refreshControlled();
       }
     }
   }, [session]);

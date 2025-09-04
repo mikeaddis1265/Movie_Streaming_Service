@@ -52,9 +52,23 @@ export async function POST(request: NextRequest) {
     console.log("Found plan:", plan.name);
 
     const currentDate = new Date();
-    const endDate = new Date();
-    if (plan.interval === "month") endDate.setMonth(endDate.getMonth() + 1);
-    else if (plan.interval === "year") endDate.setFullYear(endDate.getFullYear() + 1);
+    const endDate = new Date(currentDate); // Create proper copy
+    
+    // Add the subscription period based on plan interval
+    if (plan.interval === "month") {
+      endDate.setMonth(endDate.getMonth() + 1);
+    } else if (plan.interval === "year") {
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    } else {
+      // Default to 1 month if interval is not recognized
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
+    
+    console.log("Date calculation:");
+    console.log("- Current date:", currentDate.toISOString());
+    console.log("- Plan interval:", plan.interval);
+    console.log("- End date calculated:", endDate.toISOString());
+    console.log("- Duration (days):", Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)));
 
     console.log("Creating/updating subscription for user:", userId);
     console.log("Plan details:", { 
