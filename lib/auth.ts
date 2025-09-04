@@ -60,10 +60,19 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ account }) {
-      // Defer to PrismaAdapter for account creation/linking
-      // Keep default provider safety (no auto-linking by email unless explicitly enabled)
-      return true;
+    async signIn({ account, profile, user }) {
+      try {
+        console.log("SignIn callback - Account:", account);
+        console.log("SignIn callback - Profile:", profile);
+        console.log("SignIn callback - User:", user);
+        
+        // Defer to PrismaAdapter for account creation/linking
+        // Keep default provider safety (no auto-linking by email unless explicitly enabled)
+        return true;
+      } catch (error) {
+        console.error("SignIn callback error:", error);
+        return false;
+      }
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
@@ -137,6 +146,15 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/auth",
+    error: "/auth",
+  },
+  events: {
+    async signIn({ user, account, profile }) {
+      console.log("User signed in:", { user: user?.email, provider: account?.provider });
+    },
+    async signInError({ error }) {
+      console.error("Sign in error:", error);
+    },
   },
   secret: env.NEXTAUTH_SECRET,
 };
