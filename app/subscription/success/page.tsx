@@ -15,6 +15,7 @@ function SuccessContent() {
   const [error, setError] = useState<string | null>(null);
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
 
+
   useEffect(() => {
     const verifyPayment = async () => {
       try {
@@ -109,22 +110,11 @@ function SuccessContent() {
           window.dispatchEvent(new Event("subscription-updated"));
           window.dispatchEvent(new CustomEvent("force-subscription-refresh"));
 
-          // Optional: perform a hard refresh as a fallback if components didn't update
+          // Give components time to update instead of force reloading
+          // This prevents the reload loop that was causing users to get stuck
           setTimeout(() => {
-            try {
-              const navHasPremium =
-                !!document.querySelector(".ms-premium-badge");
-              const navGetPremium = !!document.querySelector(".ms-get-premium");
-              if (!navHasPremium && navGetPremium) {
-                console.log(
-                  "Fallback: hard reload to reflect subscription state"
-                );
-                window.location.reload();
-              }
-            } catch (_) {
-              window.location.reload();
-            }
-          }, 2500);
+            console.log("Subscription update events dispatched, components should be updated");
+          }, 1000);
         }
       } catch (err) {
         console.error("Verification error:", err);
