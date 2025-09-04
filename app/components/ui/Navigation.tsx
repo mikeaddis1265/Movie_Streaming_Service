@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useSubscription } from "@/lib/hooks/useSubscription";
 
 interface UserSubscription {
   hasSubscription: boolean;
