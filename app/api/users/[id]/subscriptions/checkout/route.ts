@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
           )}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`,
           meta: {
             userId: session.user.id,
-            planId: plan.id,
+            planId: plan.id.toString(),
           },
         });
 
