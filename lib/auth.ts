@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
         user ||
         trigger === "update" ||
         !token.lastUpdated ||
-        Date.now() - lastUpdated > 5 * 60 * 1000
+        Date.now() - lastUpdated > 2 * 60 * 1000 // Reduced from 5 to 2 minutes for faster updates
       ) {
         // Fetch user data from database to get updated role, subscription info
         try {

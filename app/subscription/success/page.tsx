@@ -83,9 +83,14 @@ function SuccessContent() {
           // Wait for database operations to fully complete
           await new Promise((resolve) => setTimeout(resolve, 1200));
 
-          // Force a NextAuth session refresh so UI reflects new subscription immediately
+          // Force multiple NextAuth session refreshes to ensure subscription status updates
           try {
+            console.log("Forcing session update...");
             await update?.();
+            // Wait a bit and update again to catch any timing issues
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await update?.();
+            console.log("Session updates completed");
           } catch (e) {
             console.warn("Session update failed, continuing:", e);
           }
@@ -117,11 +122,18 @@ function SuccessContent() {
             // Ignore storage errors
           }
 
-          // Give components time to update instead of force reloading
-          // This prevents the reload loop that was causing users to get stuck
+          // Give components time to update, then trigger additional refresh events
           setTimeout(() => {
-            console.log("Subscription update events dispatched, components should be updated");
+            console.log("First round of subscription update events dispatched");
+            window.dispatchEvent(new Event("subscription-updated"));
+            window.dispatchEvent(new CustomEvent("force-subscription-refresh"));
           }, 1000);
+          
+          setTimeout(() => {
+            console.log("Second round of subscription update events dispatched");
+            window.dispatchEvent(new Event("subscription-updated"));
+            window.dispatchEvent(new CustomEvent("force-subscription-refresh"));
+          }, 2000);
         }
       } catch (err) {
         console.error("Verification error:", err);
