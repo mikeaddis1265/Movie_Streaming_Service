@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Looking up plan with ID:", planId);
-    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
+    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: parseInt(planId) } });
     if (!plan) {
       console.error("Plan not found in database:", planId);
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
