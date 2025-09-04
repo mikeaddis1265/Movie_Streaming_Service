@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useSubscription } from "@/lib/hooks/useSubscription";
 
 interface UserSubscription {
   hasSubscription: boolean;
@@ -14,6 +16,7 @@ interface UserSubscription {
 
 export default function Navigation() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [isGenreOpen, setIsGenreOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
@@ -33,6 +36,33 @@ export default function Navigation() {
     if (session?.user?.id) {
       fetchUserSubscription();
     }
+  }, [session]);
+
+  // Refetch when route changes (client-side navigation)
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserSubscription();
+    }
+  }, [pathname]);
+
+  // Refetch when window regains focus or tab becomes visible
+  useEffect(() => {
+    const handleFocus = () => {
+      if (session?.user?.id) {
+        fetchUserSubscription();
+      }
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && session?.user?.id) {
+        fetchUserSubscription();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [session]);
 
   useEffect(() => {

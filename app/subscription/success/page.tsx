@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 function SuccessContent() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [verifying, setVerifying] = useState(true);
@@ -79,7 +79,14 @@ function SuccessContent() {
           }
 
           // Wait for database operations to fully complete
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 1200));
+
+          // Force a NextAuth session refresh so UI reflects new subscription immediately
+          try {
+            await update?.();
+          } catch (e) {
+            console.warn("Session update failed, continuing:", e);
+          }
 
           // Try to load user subscription if session exists
           if (session?.user?.id) {
@@ -101,11 +108,19 @@ function SuccessContent() {
           window.dispatchEvent(new Event("subscription-updated"));
           window.dispatchEvent(new CustomEvent("force-subscription-refresh"));
           
-          // Force a hard refresh to ensure all components get updated data
+          // Optional: perform a hard refresh as a fallback if components didn't update
           setTimeout(() => {
-            console.log("Performing hard refresh to update all UI components");
-            window.location.reload();
-          }, 2000);
+            try {
+              const navHasPremium = !!document.querySelector('.ms-premium-badge');
+              const navGetPremium = !!document.querySelector('.ms-get-premium');
+              if (!navHasPremium && navGetPremium) {
+                console.log("Fallback: hard reload to reflect subscription state");
+                window.location.reload();
+              }
+            } catch (_) {
+              window.location.reload();
+            }
+          }, 2500);
         }
       } catch (err) {
         console.error("Verification error:", err);
