@@ -35,16 +35,28 @@ export default function Navigation() {
     if (session?.user?.id) {
       fetchUserSubscription();
       
-      // Check if we recently came from a payment success
-      // This helps catch cases where the user navigated from success page
+      // Check for force refresh flag
+      const forceRefresh = sessionStorage.getItem('force_subscription_refresh');
       const paymentSuccess = sessionStorage.getItem('payment_success_completed');
-      if (paymentSuccess) {
-        console.log('Navigation: Detected recent payment success, forcing subscription refresh');
-        // Remove the flag and force multiple refreshes with increasing delays
-        sessionStorage.removeItem('payment_success_completed');
-        setTimeout(() => fetchUserSubscription(), 500);
-        setTimeout(() => fetchUserSubscription(), 1500);
-        setTimeout(() => fetchUserSubscription(), 3000);
+      
+      if (forceRefresh || paymentSuccess) {
+        console.log('Navigation: Detected subscription change, forcing aggressive refresh');
+        
+        // Clear flags
+        if (forceRefresh) sessionStorage.removeItem('force_subscription_refresh');
+        if (paymentSuccess) sessionStorage.removeItem('payment_success_completed');
+        
+        // Aggressive refresh pattern
+        const refreshAggressively = () => {
+          setTimeout(() => fetchUserSubscription(), 100);
+          setTimeout(() => fetchUserSubscription(), 500);
+          setTimeout(() => fetchUserSubscription(), 1000);
+          setTimeout(() => fetchUserSubscription(), 2000);
+          setTimeout(() => fetchUserSubscription(), 3000);
+          setTimeout(() => fetchUserSubscription(), 5000);
+        };
+        
+        refreshAggressively();
       }
     }
   }, [session]);

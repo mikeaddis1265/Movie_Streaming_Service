@@ -83,11 +83,22 @@ function MovieDetailsContent() {
     const fetchMovieDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/movies/${movieId}`);
+        // Add cache busting and force refresh flag check
+        const forceRefresh = sessionStorage.getItem('force_subscription_refresh');
+        const cacheBuster = forceRefresh ? `&_force=${Date.now()}` : '';
+        
+        const response = await fetch(`/api/movies/${movieId}?_t=${Date.now()}${cacheBuster}`);
         if (!response.ok) {
           throw new Error("Failed to fetch movie details");
         }
         const result = await response.json();
+        
+        console.log("Movie details fetched:", {
+          requiresSubscription: result.data.requiresSubscription,
+          hasActiveSubscription: result.data.hasActiveSubscription,
+          canWatch: result.data.canWatch
+        });
+        
         setMovie(result.data);
         setUserRating(result.data.userData?.userRating);
         setInWatchlist(result.data.userData?.inWatchlist);
@@ -100,6 +111,14 @@ function MovieDetailsContent() {
     };
 
     fetchMovieDetails();
+    
+    // Check for force refresh flag and refetch if needed
+    const forceRefresh = sessionStorage.getItem('force_subscription_refresh');
+    if (forceRefresh) {
+      console.log("Movie detail: Detected subscription change, scheduling additional refreshes");
+      setTimeout(() => fetchMovieDetails(), 1000);
+      setTimeout(() => fetchMovieDetails(), 3000);
+    }
   }, [movieId]);
 
   // Listen for subscription updates to refresh movie data

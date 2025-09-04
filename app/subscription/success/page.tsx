@@ -81,15 +81,25 @@ function SuccessContent() {
           }
 
           // Wait for database operations to fully complete
-          await new Promise((resolve) => setTimeout(resolve, 1200));
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased wait time
 
-          // Force multiple NextAuth session refreshes to ensure subscription status updates
+          // Force aggressive session and data refresh
           try {
-            console.log("Forcing session update...");
+            console.log("Starting aggressive session refresh...");
+            
+            // Clear any cached data
+            if (typeof window !== 'undefined') {
+              // Force reload all cached data
+              sessionStorage.setItem('force_subscription_refresh', Date.now().toString());
+            }
+            
+            // Multiple session updates with proper delays
             await update?.();
-            // Wait a bit and update again to catch any timing issues
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 800));
             await update?.();
+            await new Promise(resolve => setTimeout(resolve, 800));
+            await update?.();
+            
             console.log("Session updates completed");
           } catch (e) {
             console.warn("Session update failed, continuing:", e);

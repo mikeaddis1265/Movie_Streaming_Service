@@ -83,12 +83,13 @@ export const authOptions: NextAuthOptions = {
       // Always fetch fresh user data on signin or when explicitly triggered
       const lastUpdated =
         typeof token.lastUpdated === "number" ? token.lastUpdated : 0;
-      if (
-        user ||
-        trigger === "update" ||
-        !token.lastUpdated ||
-        Date.now() - lastUpdated > 2 * 60 * 1000 // Reduced from 5 to 2 minutes for faster updates
-      ) {
+      
+      // Force refresh if subscription might have changed recently
+      const forceRefresh = trigger === "update" || 
+                          !token.lastUpdated || 
+                          Date.now() - lastUpdated > 30 * 1000; // Reduced to 30 seconds for subscription updates
+      
+      if (user || forceRefresh) {
         // Fetch user data from database to get updated role, subscription info
         try {
           // Only fetch if we have a valid email
