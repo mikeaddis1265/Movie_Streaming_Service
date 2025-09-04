@@ -5,28 +5,28 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 ## Team Members & Roles
 
 **Samuel Wondimu** - Frontend Developer
-- Homepage layout and design (`app/page.tsx`)
-- Search functionality (`app/search/page.tsx`) 
-- Subscription and pricing pages (`app/subscription/`)
-- User profile interface (`app/profile/`)
-- Continue watching feature (`app/continue-watching/`)
-- Favorites management (`app/favorites/`)
-- Watchlist interface (`app/watchlist/`)
-- Footer component (`app/components/ui/Footer.tsx`)
-- Conditional navigation system (`app/components/ui/ConditionalNavigation.tsx`)
-- Loading states and skeleton components (`app/components/ui/SkeletonLoader.tsx`)
+- Homepage layout and design
+- Search functionality and interface 
+- Subscription and pricing pages
+- User profile interface and management
+- Continue watching feature
+- Favorites management system
+- Watchlist interface
+- Footer component design
+- Conditional navigation system
+- Loading states and skeleton components
 - CSS styling for homepage, profile, subscription, footer, and skeleton loader
 
 **Brukan Abawey** - Frontend Developer  
-- Movie and TV show details pages (`app/details/[id]/page.tsx`)
-- Browse and categories interface (`app/browse/page.tsx`)
-- Authentication pages - login/signup (`app/auth/page.tsx`)
-- Video streaming player (`app/watch/[id]/page.tsx`)
-- Featured movie components (`app/components/movie/FeaturedMovie.tsx`)
-- Movie card components (`app/components/movie/MovieCard.tsx`)
-- Video player components (`app/components/movie/videoplayer.tsx`, `ModernVideoPlayer.tsx`)
-- Main navigation system (`app/components/ui/Navigation.tsx`)
-- Home page components (`app/components/home/`)
+- Movie and TV show details pages
+- Browse and categories interface
+- Authentication pages (login/signup)
+- Video streaming player
+- Featured movie components
+- Movie card components
+- Video player components and controls
+- Main navigation system
+- Home page components
 - CSS styling for authentication, navigation, video player, browse, and movie details
 
 **Michael Addis** - Backend Developer
