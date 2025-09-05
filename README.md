@@ -5,8 +5,9 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 ## Team Members & Roles
 
 **Samuel Wondimu** - Frontend Developer
+
 - Homepage layout and design
-- Search functionality and interface 
+- Search functionality and interface
 - Subscription and pricing pages
 - User profile interface and management
 - Continue watching feature
@@ -17,7 +18,8 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - Loading states and skeleton components
 - CSS styling for homepage, profile, subscription, footer, and skeleton loader
 
-**Brukan Abawey** - Frontend Developer  
+**Brukan Abawey** - Frontend Developer
+
 - Movie and TV show details pages
 - Browse and categories interface
 - Authentication pages (login/signup)
@@ -30,6 +32,7 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - CSS styling for authentication, navigation, video player, browse, and movie details
 
 **Michael Addis** - Backend Developer
+
 - Database design and management with PostgreSQL and Prisma
 - User authentication and authorization system
 - Subscription and payment integration with Chapa
@@ -45,7 +48,9 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 ## Demo Video
 
-**Demo Video**: [View Demo](./demo.mp4)
+**Demo Video**: `demo.mp4`
+
+_For evaluation: Please check the project folder for the complete demo video showcasing all features_
 
 ## Important Notice for Testing
 
@@ -57,12 +62,14 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 ## Core Features
 
 ### 🔐 Authentication & User Management
+
 - **Multi-Authentication**: Email/password registration and Google OAuth integration
 - **Email Verification**: Secure account activation with email verification
 - **Profile Management**: Update personal information and profile pictures
 - **Password Reset**: Forgot password functionality with secure tokens
 
-### 🎬 Movie Experience  
+### 🎬 Movie Experience
+
 - **Advanced Browse**: Categories (Popular, Top Rated, Now Playing, Upcoming)
 - **Smart Search**: Search movies with real-time results
 - **Genre Filtering**: Filter by specific movie genres
@@ -70,26 +77,30 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - **Custom Video Player**: Progress tracking and resume functionality
 
 ### 💎 Personal Collections
+
 - **Watchlist**: Save movies to watch later
-- **Favorites**: Mark and manage favorite movies  
+- **Favorites**: Mark and manage favorite movies
 - **Viewing History**: Track watched movies with progress
 - **Personalized Recommendations**: AI-powered suggestions
 
 ### 💳 Subscription & Payments (Unique Feature)
+
 - **Multiple Plans**: Basic, Standard, and Premium tiers
 - **Chapa Integration**: Ethiopian payment gateway for local payments
 - **Real-time Verification**: Instant subscription activation
 - **Subscription Management**: Upgrade, downgrade, or cancel anytime
 
 ### 👑 Admin Dashboard
+
 - **User Analytics**: Complete user management and statistics
-- **Subscription Metrics**: Revenue tracking and subscription analytics  
+- **Subscription Metrics**: Revenue tracking and subscription analytics
 - **Plan Management**: Create and modify subscription plans
 - **Platform Control**: Comprehensive admin controls
 
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/[...nextauth]` - NextAuth authentication
 - `POST /api/auth/verify-email` - Email verification
@@ -97,12 +108,14 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - `POST /api/auth/reset-password` - Reset password
 
 ### Movies & Content
+
 - `GET /api/movies/browse` - Browse movies with pagination
 - `GET /api/movies/search` - Search movies
 - `GET /api/movies/[tmdbId]` - Movie details
 - `POST /api/movies/[tmdbId]/rating` - Rate movies
 
 ### User Data
+
 - `GET /api/users/me` - Current user profile
 - `GET /api/users/[id]/subscriptions` - User subscription details
 - `POST /api/users/[id]/subscriptions/checkout` - Initialize payment
@@ -111,35 +124,41 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - `POST /api/users/[id]/viewing-history` - Update viewing progress
 
 ### Admin Panel
+
 - `GET /api/admin/users` - List all users
 - `GET /api/admin/analytics` - Platform analytics
 - `GET /api/admin/quick-stats` - Dashboard statistics
 - `GET|POST|PUT|DELETE /api/admin/subscription-plans` - Manage plans
 
 ### Payment Integration
+
 - `POST /api/webhooks/chapa` - Chapa payment webhook
 
 ## Unique Features & Innovations
 
 ### 🇪🇹 Ethiopian Payment Integration
+
 - **Chapa Gateway**: First-class support for Ethiopian payment methods
 - **Local Currency**: Payments in Ethiopian Birr (ETB)
 - **Mobile Money**: Support for popular Ethiopian mobile payment platforms
 - **Real-time Webhooks**: Instant subscription activation after payment
 
 ### 🎯 Advanced User Experience
+
 - **Smart Resume**: Remember exactly where users left off watching
 - **Intelligent Recommendations**: Personalized suggestions based on viewing history
 - **Multi-device Sync**: Continue watching across different devices
 - **Offline-ready**: Progressive Web App capabilities
 
 ### 🛡️ Enterprise-grade Security
+
 - **JWT Token Management**: Secure session handling with automatic refresh
 - **Role-based Access**: Different permission levels for users and admins
 - **Input Validation**: Comprehensive data validation using Zod schemas
 - **Rate Limiting**: API protection against abuse
 
 ### 📊 Business Intelligence
+
 - **Real-time Analytics**: Live subscription and user metrics
 - **Revenue Tracking**: Detailed payment and subscription analytics
 - **User Behavior**: Viewing patterns and engagement metrics
@@ -152,36 +171,41 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - **Database**: PostgreSQL (hosted on Supabase)
 - **Authentication**: NextAuth.js with Google OAuth
 - **Payments**: Chapa Payment Gateway (Ethiopian)
-- **Email**: Resend Email Service  
+- **Email**: Resend Email Service
 - **Movie Data**: TMDB API
 - **Deployment**: Vercel
 
 ## Getting Started
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/mikeaddis1265/Movie_Streaming_Service.git
 cd Movie_Streaming_Service/movie_streaming_service
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Configure all required variables in .env file
 ```
 
 4. Set up database:
+
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
 5. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -192,7 +216,7 @@ npm run dev
 DATABASE_URL="postgresql://username:password@host:port/database"
 NEXTAUTH_SECRET="your-secure-random-string"
 NEXTAUTH_URL="http://localhost:3000"
-GOOGLE_CLIENT_ID="your-google-oauth-client-id"  
+GOOGLE_CLIENT_ID="your-google-oauth-client-id"
 GOOGLE_CLIENT_SECRET="your-google-oauth-client-secret"
 RESEND_API_KEY="your-resend-api-key"
 TMDB_API_KEY="your-tmdb-api-key"
@@ -201,4 +225,4 @@ CHAPA_SECRET_KEY="your-chapa-secret-key"
 
 ---
 
-*Developed during Zemenay Internship Program - 2024*
+_Developed during Zemenay Internship Program - 2024_
