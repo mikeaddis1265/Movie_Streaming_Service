@@ -226,4 +226,4 @@ CHAPA_SECRET_KEY="your-chapa-secret-key"
 
 ---
 
-_Developed during Zemenay Internship Program - 2025_
+_Developed during Zemenay Internship Program - 2025_ [Visit Zemenay Tech](https://www.zemenaytech.com/)
