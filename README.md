@@ -134,13 +134,11 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 - `POST /api/webhooks/chapa` - Chapa payment webhook
 
-## Unique Features & Innovations
+## Unique Features 
 
 ### 🇪🇹 Ethiopian Payment Integration
 
 - **Chapa Gateway**: First-class support for Ethiopian payment methods
-- **Local Currency**: Payments in Ethiopian Birr (ETB)
-- **Mobile Money**: Support for popular Ethiopian mobile payment platforms
 - **Real-time Webhooks**: Instant subscription activation after payment
 
 ### 🛡️ Enterprise-grade Security
@@ -154,7 +152,6 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 - **Real-time Analytics**: Live subscription and user metrics
 - **Revenue Tracking**: Detailed payment and subscription analytics
-- **User Behavior**: Viewing patterns and engagement metrics
 - **Admin Controls**: Complete platform management dashboard
 
 ## Technology Stack
