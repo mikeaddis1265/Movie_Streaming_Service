@@ -51,7 +51,8 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 
 
-https://github.com/user-attachments/assets/3f6886ea-243c-4937-afea-6c4482254084
+
+https://github.com/user-attachments/assets/415cbfd6-9975-4e7e-b002-5edb2b38a357
 
 
 **Demo Video**: [View Demo](./demo.mp4)
