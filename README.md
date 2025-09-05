@@ -50,7 +50,7 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 **Demo Video**: [View Demo](./demo.mp4)
 
-_For evaluation: Please check the project folder for the complete demo video showcasing all features_
+ Please check the project folder for the complete demo video showcasing all features_
 
 ## Important Notice for Testing
 
