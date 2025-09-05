@@ -58,7 +58,8 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 - **Recommended**: Use Google login for the smoothest experience
 - **Alternative**: If you register with email/password, contact the developer to manually verify your account from the admin panel
-
+- 
+ **Testing Payments**: Our platform supports secure digital payment solutions for both international and local customers, including Awash Bank, Amole, telebirr, CBEBirr, COOPPay-ebirr, and M-Pesa. In test mode, no actual money is used. Clients must select test phone numbers or test credit cards provided by the payment gateways (e.g., via Chapa or other providers) to simulate payments securely. When testing subscriptions, choose the appropriate test phone number or test card from the payment provider’s test credentials to proceed. 
 ## Core Features
 
 ### 🔐 Authentication & User Management
