@@ -137,10 +137,7 @@ model SubscriptionPlan {
   @@map("subscription_plans")
 }
 
-// Example of an Int ID model:
-// model ExampleIntId {
-//   id Int @id @default(autoincrement())
-// }
+
 
 enum Role {
   USER
