@@ -48,6 +48,12 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 ## Demo Video
 
+
+
+
+https://github.com/user-attachments/assets/3f6886ea-243c-4937-afea-6c4482254084
+
+
 **Demo Video**: [View Demo](./demo.mp4)
 
  Please check the project folder for the complete demo video showcasing all features_
