@@ -81,7 +81,7 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 - **Watchlist**: Save movies to watch later
 - **Favorites**: Mark and manage favorite movies
 - **Viewing History**: Track watched movies with progress
-- **Personalized Recommendations**: AI-powered suggestions
+
 
 ### 💳 Subscription & Payments (Unique Feature)
 
