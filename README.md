@@ -48,9 +48,19 @@ A full-stack movie streaming platform where users can discover, watch, and manag
 
 ## Demo Video
 
-**Demo Video**: `demo.mp4`
 
-_For evaluation: Please check the project folder for the complete demo video showcasing all features_
+
+
+https://github.com/user-attachments/assets/89e9ab84-313a-4515-b32f-2b32ebd71e73
+
+
+
+
+
+
+**Demo Video**: [View Demo](./demo.mp4)
+
+ Please check the project folder for the complete demo video showcasing all features_
 
 ## Important Notice for Testing
 
@@ -59,6 +69,7 @@ _For evaluation: Please check the project folder for the complete demo video sho
 - **Recommended**: Use Google login for the smoothest experience
 - **Alternative**: If you register with email/password, contact the developer to manually verify your account from the admin panel
 
+ **Testing Payments**: Our platform supports secure digital payment solutions for both international and local customers, including Awash Bank, Amole, telebirr, CBEBirr, COOPPay-ebirr, and M-Pesa. In test mode, no actual money is used. Clients must select test phone numbers or test credit cards provided by the payment gateways (e.g., via Chapa or other providers) to simulate payments securely. When testing subscriptions, choose the appropriate test phone number or test card from the payment provider’s test credentials to proceed. 
 ## Core Features
 
 ### 🔐 Authentication & User Management
@@ -81,7 +92,7 @@ _For evaluation: Please check the project folder for the complete demo video sho
 - **Watchlist**: Save movies to watch later
 - **Favorites**: Mark and manage favorite movies
 - **Viewing History**: Track watched movies with progress
-- **Personalized Recommendations**: AI-powered suggestions
+
 
 ### 💳 Subscription & Payments (Unique Feature)
 
@@ -134,21 +145,12 @@ _For evaluation: Please check the project folder for the complete demo video sho
 
 - `POST /api/webhooks/chapa` - Chapa payment webhook
 
-## Unique Features & Innovations
+## Unique Features 
 
 ### 🇪🇹 Ethiopian Payment Integration
 
 - **Chapa Gateway**: First-class support for Ethiopian payment methods
-- **Local Currency**: Payments in Ethiopian Birr (ETB)
-- **Mobile Money**: Support for popular Ethiopian mobile payment platforms
 - **Real-time Webhooks**: Instant subscription activation after payment
-
-### 🎯 Advanced User Experience
-
-- **Smart Resume**: Remember exactly where users left off watching
-- **Intelligent Recommendations**: Personalized suggestions based on viewing history
-- **Multi-device Sync**: Continue watching across different devices
-- **Offline-ready**: Progressive Web App capabilities
 
 ### 🛡️ Enterprise-grade Security
 
@@ -161,7 +163,6 @@ _For evaluation: Please check the project folder for the complete demo video sho
 
 - **Real-time Analytics**: Live subscription and user metrics
 - **Revenue Tracking**: Detailed payment and subscription analytics
-- **User Behavior**: Viewing patterns and engagement metrics
 - **Admin Controls**: Complete platform management dashboard
 
 ## Technology Stack
@@ -225,4 +226,4 @@ CHAPA_SECRET_KEY="your-chapa-secret-key"
 
 ---
 
-_Developed during Zemenay Internship Program - 2024_
+_Developed during Zemenay Internship Program - 2025_ [Visit Zemenay Tech](https://www.zemenaytech.com/)
