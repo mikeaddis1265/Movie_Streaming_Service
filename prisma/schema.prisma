@@ -35,22 +35,26 @@ model VerificationToken {
 }
 
 model User {
-  id             String           @id @default(cuid())
-  name           String?
-  email          String?          @unique
-  emailVerified  DateTime?
-  image          String?
-  password       String?
-  username       String?          @unique
-  role           Role             @default(USER)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  accounts       Account[]
-  favorites      Favorite[]
-  ratings        Rating[]
-  subscription   Subscription?
-  viewingHistory ViewingHistory[]
-  watchlist      WatchlistItem[]
+  id               String           @id @default(cuid())
+  name             String?
+  email            String?          @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  username         String?          @unique
+  role             Role             @default(USER)
+  isRestricted     Boolean          @default(false)
+  restrictedUntil  DateTime?
+  restrictedReason String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  accounts         Account[]
+  favorites        Favorite[]
+  ratings          Rating[]
+  reviews          Review[]
+  subscription     Subscription?
+  viewingHistory   ViewingHistory[]
+  watchlist        WatchlistItem[]
 
   @@map("users")
 }
@@ -137,10 +141,21 @@ model SubscriptionPlan {
   @@map("subscription_plans")
 }
 
-// Example of an Int ID model:
-// model ExampleIntId {
-//   id Int @id @default(autoincrement())
-// }
+model Review {
+  id        String    @id @default(cuid())
+  userId    String
+  tmdbId    Int
+  mediaType MediaType
+  title     String?
+  content   String
+  rating    Int?      // Optional rating from 1-5 stars
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbId, mediaType])
+  @@map("reviews")
+}
 
 enum Role {
   USER
